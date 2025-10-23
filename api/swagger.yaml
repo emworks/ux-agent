@@ -1,0 +1,234 @@
+openapi: 3.0.3
+info:
+  title: UX-agent API
+  version: 1.0.0
+  description: REST API для прототипа UX-agent
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /api/users:
+    get:
+      summary: Получить список всех пользователей
+      tags: 
+        - Users
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      summary: Создать пользователя
+      tags: 
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка валидации
+
+  /api/rooms:
+    get:
+      summary: Получить список всех комнат
+      tags: 
+        - Rooms
+      responses:
+        '200':
+          description: Список комнат
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+
+    post:
+      summary: Создать новую комнату
+      tags: 
+        - Rooms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRoom'
+      responses:
+        '201':
+          description: Комната успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: Ошибка валидации
+        '404':
+          description: Владелец не найден
+
+  /api/rooms/{id}/join:
+    put:
+      summary: Присоединиться к комнате
+      tags: 
+        - Rooms
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID комнаты
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: ID пользователя
+      responses:
+        '200':
+          description: Пользователь добавлен в комнату
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: Ошибка валидации
+        '404':
+          description: Комната или пользователь не найдены
+
+  /api/rooms/{id}:
+    get:
+      summary: Получить информацию о комнате
+      tags: 
+        - Rooms
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Информация о комнате
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: Комната не найдена
+
+    delete:
+      summary: Удалить комнату (только владелец)
+      tags: 
+        - Rooms
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: ID пользователя, должен быть владельцем
+      responses:
+        '200':
+          description: Комната удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Не указан userId
+        '403':
+          description: Пользователь не владелец комнаты
+        '404':
+          description: Комната не найдена
+
+  /api/status:
+    head:
+      summary: Проверка состояния сервера
+      tags: 
+        - Health
+      responses:
+        '200':
+          description: Сервер работает
+
+components:
+  schemas:
+    NewUser:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "Alice"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "Alice"
+
+    NewRoom:
+      type: object
+      required:
+        - name
+        - ownerId
+      properties:
+        name:
+          type: string
+          example: "Room 1"
+        ownerId:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Room 1"
+        ownerId:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        participants:
+          type: array
+          items:
+            type: string
+          example:
+            - "550e8400-e29b-41d4-a716-446655440000"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-10-23T12:34:56.789Z"
