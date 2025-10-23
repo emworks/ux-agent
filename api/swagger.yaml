@@ -4,6 +4,7 @@ info:
   version: 1.0.0
   description: REST API для прототипа UX-agent
 servers:
+  - url: https://competent-verla-emworks-489771b4.koyeb.app
   - url: http://localhost:3000
 
 paths:
