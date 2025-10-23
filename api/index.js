@@ -10,10 +10,11 @@ app.use(cors());
 app.use(express.json());
 
 // Swagger
-const swaggerDocument = yaml.load(fs.readFileSync("./swagger.yaml", "utf8"));
+const swaggerPath = path.join(process.cwd(), "swagger.yaml");
+const swaggerDocument = yaml.load(fs.readFileSync(swaggerPath, "utf8"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const DB_FILE = "./db.json";
+const DB_FILE = path.join(process.cwd(), "db.json");
 if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify({ users: [], rooms: [] }));
 
 function readDB() {
@@ -118,7 +119,5 @@ app.head("/api/status", (req, res) => {
     res.status(200).end();
 });
 
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
-
-export default app;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
