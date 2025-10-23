@@ -1,11 +1,15 @@
 {
   "name": "ux-agent",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix api\" \"npm run dev --prefix frontend\"",
-    "install-all": "npm install --prefix api && npm install --prefix frontend"
+    "start": "node api/index.js"
   },
-  "devDependencies": {
-    "concurrently": "^9.0.0"
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.0",
+    "js-yaml": "^4.1.0",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^9.0.0"
   }
 }
