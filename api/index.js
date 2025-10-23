@@ -118,5 +118,7 @@ app.head("/api/status", (req, res) => {
     res.status(200).end();
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
+
+export default app;
