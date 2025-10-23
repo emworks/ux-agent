@@ -30,5 +30,3 @@ yarn-error.log*
 # Misc
 .cache/
 coverage/
-
-db.json

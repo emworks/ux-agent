@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "id": "d8579160-f7f2-444f-9329-dba9233d2117",
+      "name": "Yevgeny"
+    },
+    {
+      "id": "8146fc10-6109-4038-8b7f-1c27b0d187e7",
+      "name": "Vasily"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "35a608a2-cb39-4a26-b8ac-9dcf96f8a34b",
+      "name": "Room 1",
+      "ownerId": "d8579160-f7f2-444f-9329-dba9233d2117",
+      "participants": [
+        "d8579160-f7f2-444f-9329-dba9233d2117",
+        "8146fc10-6109-4038-8b7f-1c27b0d187e7"
+      ],
+      "createdAt": "2025-10-23T09:50:38.231Z"
+    }
+  ]
+}
