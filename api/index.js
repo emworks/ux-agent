@@ -11,11 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 // Swagger
-const swaggerPath = path.join(process.cwd(), "./api/swagger.yaml");
+const swaggerPath = path.join(process.cwd(), "swagger.yaml");
 const swaggerDocument = yaml.load(fs.readFileSync(swaggerPath, "utf8"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const DB_FILE = path.join(process.cwd(), "./api/db.json");
+const DB_FILE = path.join(process.cwd(), "db.json");
 if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify({ users: [], rooms: [] }));
 
 function readDB() {
