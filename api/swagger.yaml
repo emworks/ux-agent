@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: REST API для прототипа UX-agent
 servers:
-  - url: https://ux-agent-z2sv.onrender.com
+  - url: https://ux-agent-production.up.railway.app
   - url: http://localhost:3000
 
 paths:
