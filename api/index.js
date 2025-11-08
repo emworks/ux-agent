@@ -5,6 +5,8 @@ import swaggerUi from "swagger-ui-express";
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
+import http from "http";
+import { WebSocketServer } from "ws";
 
 const app = express();
 app.use(cors());
@@ -95,7 +97,24 @@ app.put("/api/rooms/:id/join", (req, res) => {
     if (!room.participants.includes(userId)) room.participants.push(userId);
     writeDB(db);
 
+    broadcastRoomUpdate(id);
     res.json(room);
+});
+
+app.put("/api/rooms/:id/leave", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "User is required" });
+
+  const { id } = req.params;
+  const db = readDB();
+  const room = db.rooms.find(r => r.id === id);
+  if (!room) return res.status(404).json({ error: "Room not found" });
+
+  room.participants = room.participants.filter(p => p !== userId);
+  writeDB(db);
+
+  broadcastRoomUpdate(id);
+  res.json(room);
 });
 
 app.delete("/api/rooms/:id", (req, res) => {
@@ -112,6 +131,7 @@ app.delete("/api/rooms/:id", (req, res) => {
     db.rooms = db.rooms.filter(r => r.id !== id);
     writeDB(db);
 
+    broadcastRoomUpdate(id);
     res.json({ message: "Room deleted" });
 });
 
@@ -120,5 +140,57 @@ app.head("/api/status", (req, res) => {
     res.status(200).end();
 });
 
+// ROOM
+
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
+// app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
+
+// --- HTTP + WebSocket сервер ---
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
+// Храним подключения: roomId → Set<WebSocket>
+const roomSockets = new Map();
+
+wss.on("connection", (ws, req) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const match = url.pathname.match(/^\/rooms\/(.+)$/);
+  if (!match) {
+    ws.close();
+    return;
+  }
+
+  const roomId = match[1];
+  console.log(`🔗 WebSocket connected to room ${roomId}`);
+
+  if (!roomSockets.has(roomId)) roomSockets.set(roomId, new Set());
+  roomSockets.get(roomId).add(ws);
+
+  ws.on("close", () => {
+    const set = roomSockets.get(roomId);
+    if (set) {
+      set.delete(ws);
+      if (set.size === 0) roomSockets.delete(roomId);
+    }
+    console.log(`❌ WebSocket left room ${roomId}`);
+  });
+});
+
+// Рассылка обновлений комнаты
+function broadcastRoomUpdate(roomId) {
+  const db = readDB();
+  const room = db.rooms.find(r => r.id === roomId);
+  const sockets = roomSockets.get(roomId);
+  if (!room || !sockets) return;
+
+  const message = JSON.stringify({ type: "room_update", room });
+  for (const client of sockets) {
+    if (client.readyState === 1) client.send(message);
+  }
+}
+
+// Запускаем HTTP + WS сервер
+server.listen(PORT, () =>
+  console.log(`✅ Server + WebSocket running on http://localhost:${PORT}`)
+);
