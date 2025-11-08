@@ -102,19 +102,19 @@ app.put("/api/rooms/:id/join", (req, res) => {
 });
 
 app.put("/api/rooms/:id/leave", (req, res) => {
-  const { userId } = req.body;
-  if (!userId) return res.status(400).json({ error: "User is required" });
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: "User is required" });
 
-  const { id } = req.params;
-  const db = readDB();
-  const room = db.rooms.find(r => r.id === id);
-  if (!room) return res.status(404).json({ error: "Room not found" });
+    const { id } = req.params;
+    const db = readDB();
+    const room = db.rooms.find(r => r.id === id);
+    if (!room) return res.status(404).json({ error: "Room not found" });
 
-  room.participants = room.participants.filter(p => p !== userId);
-  writeDB(db);
+    room.participants = room.participants.filter(p => p !== userId);
+    writeDB(db);
 
-  broadcastRoomUpdate(id);
-  res.json(room);
+    broadcastRoomUpdate(id);
+    res.json(room);
 });
 
 app.delete("/api/rooms/:id", (req, res) => {
@@ -154,43 +154,124 @@ const wss = new WebSocketServer({ server });
 const roomSockets = new Map();
 
 wss.on("connection", (ws, req) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const match = url.pathname.match(/^\/rooms\/(.+)$/);
-  if (!match) {
-    ws.close();
-    return;
-  }
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const match = url.pathname.match(/^\/rooms\/(.+)$/);
+    if (!match) { ws.close(); return; }
 
-  const roomId = match[1];
-  console.log(`🔗 WebSocket connected to room ${roomId}`);
+    const roomId = match[1];
+    if (!roomSockets.has(roomId)) roomSockets.set(roomId, new Set());
+    roomSockets.get(roomId).add(ws);
 
-  if (!roomSockets.has(roomId)) roomSockets.set(roomId, new Set());
-  roomSockets.get(roomId).add(ws);
+    ws.on("message", (raw) => {
+        const { action, payload } = JSON.parse(raw);
+        const db = readDB();
+        const room = db.rooms.find(r => r.id === roomId);
+        if (!room) return;
 
-  ws.on("close", () => {
-    const set = roomSockets.get(roomId);
-    if (set) {
-      set.delete(ws);
-      if (set.size === 0) roomSockets.delete(roomId);
-    }
-    console.log(`❌ WebSocket left room ${roomId}`);
-  });
+        // Гарантируем, что поле rounds существует
+        if (!room.rounds) room.rounds = [];
+        const currentRound = room.rounds.length > 0 ? room.rounds[room.rounds.length - 1] : null;
+
+        switch (action) {
+            case "start_round":
+                // Только фасилитатор может стартовать раунд
+                if (room.ownerId !== payload.userId) return;
+
+                const newRound = {
+                    id: uuidv4(),
+                    task: payload.task,
+                    status: "voting", // сразу начинается голосование
+                    votes: {},
+                    cognitiveLoad: {},
+                    teamEffectiveness: {}
+                };
+                room.rounds.push(newRound);
+                writeDB(db);
+                broadcastRoundUpdate(roomId, newRound);
+                break;
+
+            case "vote":
+                if (payload.userId === room.ownerId) return; // фасилитатор не голосует
+                if (!currentRound || currentRound.status !== "voting") return;
+                if (!room.participants.includes(payload.userId)) return;
+                currentRound.votes[payload.userId] = payload.storyPoints;
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+                break;
+
+            case "cognitive_load":
+                if (payload.userId === room.ownerId) return;
+                if (!currentRound || currentRound.status !== "voting") return;
+                if (!room.participants.includes(payload.userId)) return;
+                currentRound.cognitiveLoad[payload.userId] = payload.load;
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+                break;
+
+            case "team_effectiveness":
+                if (!currentRound || currentRound.status !== "teamEffectiveness") return;
+                if (!room.participants.includes(payload.userId)) return;
+
+                currentRound.teamEffectiveness[payload.userId] = payload.score;
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+                break;
+
+            case "next_phase":
+                if (!currentRound || room.ownerId !== payload.userId) return;
+
+                if (currentRound.status === "voting") currentRound.status = "teamEffectiveness";
+                else if (currentRound.status === "teamEffectiveness") currentRound.status = "completed";
+
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+                break;
+
+            case "end_round":
+                if (!currentRound || room.ownerId !== payload.userId) return;
+
+                currentRound.status = "completed";
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+                break;
+        }
+    });
+
+    ws.on("close", () => {
+        const set = roomSockets.get(roomId);
+        if (set) {
+            set.delete(ws);
+            if (set.size === 0) roomSockets.delete(roomId);
+        }
+    });
 });
 
-// Рассылка обновлений комнаты
-function broadcastRoomUpdate(roomId) {
-  const db = readDB();
-  const room = db.rooms.find(r => r.id === roomId);
-  const sockets = roomSockets.get(roomId);
-  if (!room || !sockets) return;
+// ================= Broadcast =================
+function broadcastRoundUpdate(roomId, round) {
+    const sockets = roomSockets.get(roomId);
+    if (!sockets) return;
 
-  const message = JSON.stringify({ type: "room_update", room });
-  for (const client of sockets) {
-    if (client.readyState === 1) client.send(message);
-  }
+    const message = JSON.stringify({ type: "round_update", round });
+    for (const ws of sockets) {
+        if (ws.readyState === 1) ws.send(message);
+    }
+}
+
+function broadcastRoomUpdate(roomId) {
+    const db = readDB();
+    const room = db.rooms.find(r => r.id === roomId);
+    if (!room) return;
+
+    const message = JSON.stringify({ type: "room_update", room });
+    const sockets = roomSockets.get(roomId);
+    if (!sockets) return;
+
+    for (const ws of sockets) {
+        if (ws.readyState === 1) ws.send(message);
+    }
 }
 
 // Запускаем HTTP + WS сервер
 server.listen(PORT, () =>
-  console.log(`✅ Server + WebSocket running on http://localhost:${PORT}`)
+    console.log(`✅ Server + WebSocket running on http://localhost:${PORT}`)
 );

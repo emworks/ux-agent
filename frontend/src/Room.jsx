@@ -1,12 +1,13 @@
-// Room.jsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { joinRoom, leaveRoom } from "./api";
+import PlanningPokerRound from "./PlanningPokerRound";
 
 export default function Room() {
   const { id } = useParams();
   const [user] = useState(JSON.parse(localStorage.getItem("user")));
   const [room, setRoom] = useState(null);
+  const [ws, setWs] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,7 +16,7 @@ export default function Room() {
       return;
     }
 
-    let ws;
+    let socket;
 
     async function init() {
       // 1. Присоединяемся через API
@@ -23,9 +24,10 @@ export default function Room() {
       setRoom(joined);
 
       // 2. Подключаемся к WebSocket
-      ws = new WebSocket(`ws://localhost:3000/rooms/${id}`);
+      socket = new WebSocket(`ws://localhost:3000/rooms/${id}`);
+      setWs(socket);
 
-      ws.onmessage = (event) => {
+      socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
         if (message.type === "room_update") {
           // Обновляем комнату при любых изменениях
@@ -33,13 +35,13 @@ export default function Room() {
         }
       };
 
-      ws.onclose = () => console.log("🔌 Disconnected from room");
+      socket.onclose = () => console.log("🔌 Disconnected from room");
     }
 
     init();
 
     return () => {
-      if (ws) ws.close();
+      if (socket) socket.close();
     };
   }, [id, user, navigate]);
 
@@ -49,10 +51,7 @@ export default function Room() {
     const confirmLeave = window.confirm("Leave the room?");
     if (!confirmLeave) return;
 
-    // 3. Отправляем запрос на выход из комнаты
     await leaveRoom(id, user.id);
-
-    // После выхода возвращаемся в лобби
     navigate("/");
   }
 
@@ -68,6 +67,13 @@ export default function Room() {
       </div>
 
       <button onClick={handleLeave}>Leave Room</button>
+
+      <PlanningPokerRound
+        user={user}
+        isFacilitator={user.id === room.ownerId}
+        room={room}
+        ws={ws} // Используем существующий WebSocket
+      />
 
       <div style={{ marginTop: 20 }}>
         <Link to="/">← Back to lobby</Link>
