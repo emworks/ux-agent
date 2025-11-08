@@ -8,6 +8,9 @@ import path from "path";
 import http from "http";
 import { WebSocketServer } from "ws";
 
+import { getRole } from "./src/role.js";
+import { generateRecommendation } from "./src/llm.js";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -211,6 +214,16 @@ wss.on("connection", (ws, req) => {
                 currentRound.cognitiveLoad[payload.userId] = payload.load;
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
+
+                // Когда все участники отметили нагрузку
+                const allLoads = Object.values(currentRound.cognitiveLoad);
+                if (allLoads.length === room.participants.length) {
+                    const avgLoad = allLoads.reduce((a, b) => a + b, 0) / allLoads.length;
+                    currentRound.average_cognitive_load = Number(avgLoad.toFixed(2));
+                    writeDB(db);
+                    broadcastRoundUpdate(roomId, currentRound);
+                }
+
                 break;
 
             case "team_effectiveness":
@@ -219,6 +232,16 @@ wss.on("connection", (ws, req) => {
                 currentRound.teamEffectiveness[payload.userId] = payload.score;
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
+
+                // когда все проголосовали — сохраняем среднюю эффективность
+                const allScores = Object.values(currentRound.teamEffectiveness);
+                if (allScores.length === room.participants.length) {
+                    const avg = allScores.reduce((a, b) => a + b, 0) / allScores.length;
+                    room.team_performance = Number(avg.toFixed(2));
+                    writeDB(db);
+                    broadcastRoomUpdate(roomId);
+                }
+
                 break;
 
             case "recommendation_vote":
@@ -227,6 +250,21 @@ wss.on("connection", (ws, req) => {
                 currentRound.recommendationVotes[payload.userId] = payload.like;
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
+
+                const allVotes = Object.values(currentRound.recommendationVotes);
+                if (allVotes.length === room.participants.length) {
+                    const positive = allVotes.filter(v => v === true).length;
+                    const acceptance = positive / allVotes.length;
+
+                    // Обновляем доверие комнаты (глобальная метрика)
+                    const prevReliance = room.reliance ?? 0.5;
+                    const newReliance = (prevReliance * (room.rounds.length - 1) + acceptance) / room.rounds.length;
+
+                    room.reliance = Number(newReliance.toFixed(2));
+                    writeDB(db);
+                    broadcastRoomUpdate(roomId);
+                }
+
                 break;
 
             case "next_phase":
@@ -235,12 +273,17 @@ wss.on("connection", (ws, req) => {
                 if (currentRound.status === "voting") {
                     // Генерируем рекомендацию для второго голосования
                     currentRound.status = "recommendation";
-                    currentRound.recommendation = await generateRecommendation({
+
+                    const context = {
                         task: currentRound.task,
                         votes: currentRound.votes,
-                        cognitiveLoad: currentRound.cognitiveLoad,
-                        teamEffectiveness: currentRound.teamEffectiveness
-                    });
+                        cognitive_load: currentRound.average_cognitive_load,
+                        team_performance: room.team_performance,
+                        reliance: room.reliance
+                    };
+
+                    const role = await getRole(context.cognitive_load, context.team_performance, context.reliance);
+                    currentRound.recommendation = await generateRecommendation(context, role);
                 } else if (currentRound.status === "recommendation") currentRound.status = "teamEffectiveness";
                 else if (currentRound.status === "teamEffectiveness") currentRound.status = "completed";
 
@@ -289,33 +332,6 @@ function broadcastRoomUpdate(roomId) {
     for (const ws of sockets) {
         if (ws.readyState === 1) ws.send(message);
     }
-}
-
-async function generateRecommendation(context) {
-    //     const prompt = `
-    // Ты фасилитатор Planning Poker. Участники проголосовали по задаче "${context.task}".
-    // Их оценки: ${JSON.stringify(context.votes)}
-    // Их нагрузка: ${JSON.stringify(context.cognitiveLoad)}
-    // Командная эффективность: ${JSON.stringify(context.teamEffectiveness)}
-
-    // Сделай короткий совет участникам для повторного голосования. Ответ дай в 1-2 предложениях.
-    //   `;
-
-    // const completion = await openai.chat.completions.create({
-    //     model: "gpt-4",
-    //     messages: [{ role: "user", content: prompt }],
-    //     temperature: 0.7
-    // });
-
-    // return completion.choices[0].message.content.trim();
-
-    // context: { task, votes, cognitiveLoad, teamEffectiveness }
-    const votes = Object.values(context.votes || {});
-    const avgVote = votes.length ? (votes.reduce((a, b) => a + b, 0) / votes.length).toFixed(1) : "-";
-    const loads = Object.values(context.cognitiveLoad || {});
-    const avgLoad = loads.length ? (loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1) : "-";
-
-    return `Средняя оценка задачи: ${avgVote}, средняя нагрузка: ${avgLoad}. Рекомендуем обсудить детали и уточнить оценки.`;
 }
 
 // Запускаем HTTP + WS сервер
