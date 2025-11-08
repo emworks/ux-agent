@@ -29,14 +29,16 @@ function Lobby() {
   const [roomName, setRoomName] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
   async function fetchRooms() {
     const data = await getRooms();
     setRooms(data);
   }
+
+  useEffect(() => {
+    fetchRooms();
+    const interval = setInterval(fetchRooms, 3000); // обновление каждые 3 сек
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleLogin() {
     if (!name) return;
@@ -89,7 +91,6 @@ function Lobby() {
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-4">Welcome, {user.name}</h2>
 
-      {/* --- Создать комнату --- */}
       <div className="mb-6 p-4 bg-gray-50 rounded shadow">
         <h3 className="text-lg font-semibold mb-2">Create Room</h3>
         <div className="flex gap-2">
@@ -108,7 +109,6 @@ function Lobby() {
         </div>
       </div>
 
-      {/* --- Список комнат --- */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Rooms</h3>
         {rooms.length === 0 ? (
@@ -126,6 +126,11 @@ function Lobby() {
                   <div className="text-gray-600 text-sm mt-1">
                     Participants: {r.participants.length > 0 ? r.participants.join(", ") : "No one"}
                   </div>
+                  {r.rounds && r.rounds.length > 0 ? (
+                    <>Round Status: <span className="font-medium">{r.rounds[r.rounds.length - 1].status}</span></>
+                  ) : (
+                    <>No active round</>
+                  )}
                 </div>
                 <div className="flex gap-2 mt-2 md:mt-0">
                   <button

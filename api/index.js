@@ -162,7 +162,7 @@ wss.on("connection", (ws, req) => {
     if (!roomSockets.has(roomId)) roomSockets.set(roomId, new Set());
     roomSockets.get(roomId).add(ws);
 
-    ws.on("message", (raw) => {
+    ws.on("message", async (raw) => {
         const { action, payload } = JSON.parse(raw);
         const db = readDB();
         const room = db.rooms.find(r => r.id === roomId);
@@ -174,16 +174,18 @@ wss.on("connection", (ws, req) => {
 
         switch (action) {
             case "start_round":
-                // Только фасилитатор может стартовать раунд
                 if (room.ownerId !== payload.userId) return;
 
                 const newRound = {
                     id: uuidv4(),
                     task: payload.task,
-                    status: "voting", // сразу начинается голосование
+                    status: "voting", // первый этап голосования
                     votes: {},
+                    votes2: {},               // второй голос
                     cognitiveLoad: {},
-                    teamEffectiveness: {}
+                    teamEffectiveness: {},
+                    recommendation: null,     // рекомендация от бэка
+                    recommendationVotes: {}   // лайки/дизлайки
                 };
                 room.rounds.push(newRound);
                 writeDB(db);
@@ -191,10 +193,13 @@ wss.on("connection", (ws, req) => {
                 break;
 
             case "vote":
-                if (payload.userId === room.ownerId) return; // фасилитатор не голосует
-                if (!currentRound || currentRound.status !== "voting") return;
+                if (payload.userId === room.ownerId) return;
+                if (!currentRound || !["voting", "recommendation"].includes(currentRound.status)) return;
                 if (!room.participants.includes(payload.userId)) return;
-                currentRound.votes[payload.userId] = payload.storyPoints;
+
+                if (payload.voteNumber === 1) currentRound.votes[payload.userId] = payload.storyPoints;
+                else if (payload.voteNumber === 2) currentRound.votes2[payload.userId] = payload.storyPoints;
+
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
                 break;
@@ -211,8 +216,15 @@ wss.on("connection", (ws, req) => {
             case "team_effectiveness":
                 if (!currentRound || currentRound.status !== "teamEffectiveness") return;
                 if (!room.participants.includes(payload.userId)) return;
-
                 currentRound.teamEffectiveness[payload.userId] = payload.score;
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+                break;
+
+            case "recommendation_vote":
+                if (!currentRound || currentRound.status !== "recommendation") return;
+                if (!room.participants.includes(payload.userId)) return;
+                currentRound.recommendationVotes[payload.userId] = payload.like;
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
                 break;
@@ -220,7 +232,16 @@ wss.on("connection", (ws, req) => {
             case "next_phase":
                 if (!currentRound || room.ownerId !== payload.userId) return;
 
-                if (currentRound.status === "voting") currentRound.status = "teamEffectiveness";
+                if (currentRound.status === "voting") {
+                    // Генерируем рекомендацию для второго голосования
+                    currentRound.status = "recommendation";
+                    currentRound.recommendation = await generateRecommendation({
+                        task: currentRound.task,
+                        votes: currentRound.votes,
+                        cognitiveLoad: currentRound.cognitiveLoad,
+                        teamEffectiveness: currentRound.teamEffectiveness
+                    });
+                } else if (currentRound.status === "recommendation") currentRound.status = "teamEffectiveness";
                 else if (currentRound.status === "teamEffectiveness") currentRound.status = "completed";
 
                 writeDB(db);
@@ -229,7 +250,6 @@ wss.on("connection", (ws, req) => {
 
             case "end_round":
                 if (!currentRound || room.ownerId !== payload.userId) return;
-
                 currentRound.status = "completed";
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
@@ -269,6 +289,33 @@ function broadcastRoomUpdate(roomId) {
     for (const ws of sockets) {
         if (ws.readyState === 1) ws.send(message);
     }
+}
+
+async function generateRecommendation(context) {
+    //     const prompt = `
+    // Ты фасилитатор Planning Poker. Участники проголосовали по задаче "${context.task}".
+    // Их оценки: ${JSON.stringify(context.votes)}
+    // Их нагрузка: ${JSON.stringify(context.cognitiveLoad)}
+    // Командная эффективность: ${JSON.stringify(context.teamEffectiveness)}
+
+    // Сделай короткий совет участникам для повторного голосования. Ответ дай в 1-2 предложениях.
+    //   `;
+
+    // const completion = await openai.chat.completions.create({
+    //     model: "gpt-4",
+    //     messages: [{ role: "user", content: prompt }],
+    //     temperature: 0.7
+    // });
+
+    // return completion.choices[0].message.content.trim();
+
+    // context: { task, votes, cognitiveLoad, teamEffectiveness }
+    const votes = Object.values(context.votes || {});
+    const avgVote = votes.length ? (votes.reduce((a, b) => a + b, 0) / votes.length).toFixed(1) : "-";
+    const loads = Object.values(context.cognitiveLoad || {});
+    const avgLoad = loads.length ? (loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1) : "-";
+
+    return `Средняя оценка задачи: ${avgVote}, средняя нагрузка: ${avgLoad}. Рекомендуем обсудить детали и уточнить оценки.`;
 }
 
 // Запускаем HTTP + WS сервер

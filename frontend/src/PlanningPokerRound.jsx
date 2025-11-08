@@ -23,18 +23,21 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
     sendAction("start_round", { task: taskInput, userId: user.id });
     setTaskInput("");
   };
-  const handleVote = (sp) => sendAction("vote", { userId: user.id, storyPoints: sp });
+
+  const handleVote = (sp, voteNumber = 1) => sendAction("vote", { userId: user.id, storyPoints: sp, voteNumber });
   const handleCognitiveLoad = (cl) => sendAction("cognitive_load", { userId: user.id, load: cl });
   const handleTeamEffectiveness = (score) => sendAction("team_effectiveness", { userId: user.id, score });
+  const handleRecommendationVote = (like) => sendAction("recommendation_vote", { userId: user.id, like });
   const endRound = () => sendAction("end_round", { userId: user.id });
   const nextPhase = () => sendAction("next_phase", { userId: user.id });
 
   const status = round?.status || "ждет начала";
-  const participants = round
-    ? Array.from(new Set([...Object.keys(round.votes || {}), ...Object.keys(round.cognitiveLoad || {}), ...Object.keys(round.teamEffectiveness || {})]))
-    : room.participants || [];
 
-  const progressVotes = participants.length ? (Object.keys(round?.votes || {}).length / participants.length) * 100 : 0;
+  const participants = room.participants || [];
+
+  const progressVote1 = participants.length ? (Object.keys(round?.votes || {}).length / participants.length) * 100 : 0;
+  const progressVote2 = participants.length ? (Object.keys(round?.votes2 || {}).length / participants.length) * 100 : 0;
+  const progressRecommendation = participants.length ? (Object.keys(round?.recommendationVotes || {}).length / participants.length) * 100 : 0;
   const progressTeam = participants.length ? (Object.keys(round?.teamEffectiveness || {}).length / participants.length) * 100 : 0;
 
   const getInitials = (name) => name.slice(0, 2).toUpperCase();
@@ -42,7 +45,9 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   return (
     <div className="bg-white shadow-xl rounded-xl p-6 mt-6 border border-gray-200 max-w-4xl mx-auto">
       <h3 className="text-3xl font-bold mb-4 text-center">Planning Poker Round</h3>
-      <p className="text-gray-700 mb-6 text-center">Status: <span className="font-semibold">{status}</span></p>
+      <p className="text-gray-700 mb-6 text-center">
+        Status: <span className="font-semibold">{status}</span>
+      </p>
 
       {/* --- Фасилитатор стартует раунд --- */}
       {isFacilitator && (status === "ждет начала" || status === "completed") && (
@@ -62,80 +67,80 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         </div>
       )}
 
-      {/* --- Фаза голосования для участников --- */}
+      {/* --- Vote 1 --- */}
       {!isFacilitator && status === "voting" && (
+        <VotePhase
+          title="Vote 1"
+          participants={participants}
+          handleVote={(sp) => handleVote(sp, 1)}
+          votes={round?.votes}
+          progress={progressVote1}
+          showCognitiveLoad
+          handleCognitiveLoad={handleCognitiveLoad}
+        />
+      )}
+
+      {/* --- Vote 2 с рекомендацией --- */}
+      {!isFacilitator && status === "recommendation" && (
         <div className="mb-6">
           <TaskCard task={round?.task} />
-          <h4 className="text-lg font-semibold mb-2">Vote</h4>
-          <div className="flex flex-wrap gap-3 mb-4 justify-center">
-            {[1, 2, 3, 5, 8].map(sp => (
-              <button
-                key={sp}
-                onClick={() => handleVote(sp)}
-                className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition shadow-sm"
-              >
-                {sp} SP
-              </button>
-            ))}
+          {round?.recommendation && (
+            <div className="bg-yellow-100 p-4 rounded mb-4 text-center">
+              Recommendation: <span className="font-medium">{round.recommendation}</span>
+            </div>
+          )}
+          <VotePhase
+            title="Vote 2"
+            participants={participants}
+            handleVote={(sp) => handleVote(sp, 2)}
+            votes={round?.votes2}
+            progress={progressVote2}
+          />
+          <h4 className="text-lg font-semibold mb-2">Do you agree with recommendation?</h4>
+          <div className="flex gap-4 justify-center mb-2">
+            <button onClick={() => handleRecommendationVote(true)} className="bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 shadow-sm">👍</button>
+            <button onClick={() => handleRecommendationVote(false)} className="bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600 shadow-sm">👎</button>
           </div>
-          <h4 className="text-lg font-semibold mb-2">Cognitive Load (1-7)</h4>
-          <div className="flex flex-wrap gap-2 mb-2 justify-center">
-            {[1, 2, 3, 4, 5, 6, 7].map(cl => (
-              <button
-                key={cl}
-                onClick={() => handleCognitiveLoad(cl)}
-                className="bg-yellow-400 text-black px-3 py-1 rounded-full hover:bg-yellow-500 transition shadow-sm"
-              >
-                {cl}
-              </button>
-            ))}
-          </div>
-          <ProgressBar progress={progressVotes} color="green" label={`${Object.keys(round?.votes || {}).length}/${participants.length} voted`} />
+          <ProgressBar progress={progressRecommendation} color="blue" label={`${Object.keys(round?.recommendationVotes || {}).length}/${participants.length} voted`} />
         </div>
       )}
 
-      {/* --- Фаза командной эффективности для участников --- */}
+      {/* --- Team Effectiveness --- */}
       {!isFacilitator && status === "teamEffectiveness" && (
-        <div className="mb-6">
-          <TaskCard task={round?.task} />
-          <h4 className="text-lg font-semibold mb-2">Team Effectiveness (1-7)</h4>
-          <div className="flex flex-wrap gap-2 justify-center mb-2">
-            {[1, 2, 3, 4, 5, 6, 7].map(score => (
-              <button
-                key={score}
-                onClick={() => handleTeamEffectiveness(score)}
-                className="bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition shadow-sm"
-              >
-                {score}
-              </button>
-            ))}
-          </div>
-          <ProgressBar progress={progressTeam} color="blue" label={`${Object.keys(round?.teamEffectiveness || {}).length}/${participants.length} scored`} />
-        </div>
+        <VotePhase
+          title="Team Effectiveness"
+          participants={participants}
+          votes={round?.teamEffectiveness}
+          progress={progressTeam}
+          options={[1,2,3,4,5,6,7]}
+          handleVote={handleTeamEffectiveness}
+        />
       )}
 
       {/* --- Карточки участников --- */}
       <div className="mb-6">
         <h4 className="text-lg font-semibold mb-3 text-center">Participants</h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {participants.map(id => (
+          {participants.map((id) => (
             <div key={id} className="flex flex-col items-center bg-gray-50 p-4 rounded-2xl shadow hover:shadow-md transition">
-              <div className="w-12 h-12 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(id)}
-              </div>
+              <div className="w-12 h-12 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-lg mb-2">{getInitials(id)}</div>
               <strong className="mb-1">{id}</strong>
-              {/* Для фасилитатора показываем все результаты */}
               {isFacilitator ? (
                 <>
-                  <div className="text-sm">Vote: {round?.votes?.[id] ?? "-"}</div>
-                  <div className="text-sm">Load: {round?.cognitiveLoad?.[id] ?? "-"}</div>
+                  <div className="text-sm">Vote 1: {round?.votes?.[id] ?? "-"}</div>
+                  <div className="text-sm">Vote 2: {round?.votes2?.[id] ?? "-"}</div>
+                  <div className="text-sm">Recommendation: {round?.recommendationVotes?.[id] !== undefined ? (round.recommendationVotes[id] ? "👍" : "👎") : "-"}</div>
                   <div className="text-sm">Team: {round?.teamEffectiveness?.[id] ?? "-"}</div>
+                  <div className="text-sm">Load: {round?.cognitiveLoad?.[id] ?? "-"}</div>
                 </>
-              ) : (
-                // Для участников показываем только свой vote
-                <div className="text-sm">
-                  Vote: {round?.votes?.[id] ?? (id === user.id ? "-" : "hidden")}
-                </div>
+              ) : id === user.id && (
+                <>
+                  {round?.votes?.[id] !== undefined && <div className="text-sm">Vote 1: {round.votes[id]}</div>}
+                  {round?.votes2?.[id] !== undefined && <div className="text-sm">Vote 2: {round.votes2[id]}</div>}
+                  {round?.recommendationVotes?.[id] !== undefined && <div className="text-sm">Recommendation: {round.recommendationVotes[id] ? "👍" : "👎"}</div>}
+                  {round?.teamEffectiveness?.[id] !== undefined && <div className="text-sm">Team: {round.teamEffectiveness[id]}</div>}
+                  {round?.cognitiveLoad?.[id] !== undefined && <div className="text-sm">Load: {round.cognitiveLoad[id]}</div>}
+                </>
               )}
             </div>
           ))}
@@ -145,20 +150,39 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {/* --- Фасилитаторские кнопки --- */}
       {isFacilitator && status !== "ждет начала" && status !== "completed" && (
         <div className="flex justify-center gap-4 mb-4">
-          <button onClick={nextPhase} className="bg-purple-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 shadow-md transition">
-            Next Phase
-          </button>
-          <button onClick={endRound} className="bg-red-500 text-white px-5 py-2 rounded-full hover:bg-red-600 shadow-md transition">
-            End Round
-          </button>
+          <button onClick={nextPhase} className="bg-purple-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 shadow-md transition">Next Phase</button>
+          <button onClick={endRound} className="bg-red-500 text-white px-5 py-2 rounded-full hover:bg-red-600 shadow-md transition">End Round</button>
         </div>
       )}
 
       {status === "completed" && (
-        <div className="text-center py-3 bg-gray-100 rounded-xl font-semibold shadow-inner">
-          Round Completed
+        <div className="text-center py-3 bg-gray-100 rounded-xl font-semibold shadow-inner">Round Completed</div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Компонент Vote / Team ----------
+function VotePhase({ title, participants, handleVote, votes, progress, options = [1,2,3,5,8], showCognitiveLoad, handleCognitiveLoad }) {
+  return (
+    <div className="mb-6">
+      <h4 className="text-lg font-semibold mb-2">{title}</h4>
+      <div className="flex flex-wrap gap-3 mb-4 justify-center">
+        {options.map((val) => (
+          <button key={val} onClick={() => handleVote(val)} className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition shadow-sm">{val}</button>
+        ))}
+      </div>
+      {showCognitiveLoad && (
+        <div>
+          <h4 className="text-lg font-semibold mb-2">Cognitive Load (1-7)</h4>
+          <div className="flex flex-wrap gap-2 mb-2 justify-center">
+            {[1,2,3,4,5,6,7].map(cl => (
+              <button key={cl} onClick={() => handleCognitiveLoad(cl)} className="bg-yellow-400 text-black px-3 py-1 rounded-full hover:bg-yellow-500 transition shadow-sm">{cl}</button>
+            ))}
+          </div>
         </div>
       )}
+      <ProgressBar progress={progress} color="green" label={`${votes ? Object.keys(votes).length : 0}/${participants.length} voted`} />
     </div>
   );
 }
