@@ -19,18 +19,17 @@ export default function Room() {
     let socket;
 
     async function init() {
-      // 1. Присоединяемся через API
+      // Присоединяемся через API
       const joined = await joinRoom(id, user.id);
       setRoom(joined);
 
-      // 2. Подключаемся к WebSocket
+      // Подключаемся к WebSocket
       socket = new WebSocket(`ws://localhost:3000/rooms/${id}`);
       setWs(socket);
 
       socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
         if (message.type === "room_update") {
-          // Обновляем комнату при любых изменениях
           setRoom(message.room);
         }
       };
@@ -47,7 +46,6 @@ export default function Room() {
 
   async function handleLeave() {
     if (!room || !user) return;
-
     const confirmLeave = window.confirm("Leave the room?");
     if (!confirmLeave) return;
 
@@ -55,28 +53,46 @@ export default function Room() {
     navigate("/");
   }
 
-  if (!room) return <div>Loading room...</div>;
+  if (!room) return <div className="text-center py-10 text-gray-500">Loading room...</div>;
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Room: {room.name}</h2>
-
-      <div style={{ marginBottom: 10 }}>
-        <strong>Participants:</strong>{" "}
-        {room.participants.length > 0 ? room.participants.join(", ") : "No one here yet"}
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Room: {room.name}</h2>
+        <button
+          onClick={handleLeave}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+        >
+          Leave Room
+        </button>
       </div>
 
-      <button onClick={handleLeave}>Leave Room</button>
+      <div className="mb-6 p-4 bg-gray-50 rounded shadow">
+        <strong className="text-gray-700">Participants:</strong>{" "}
+        {room.participants.length > 0 ? (
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {room.participants.map((p) => (
+              <li key={p} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                {p}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span className="text-gray-400 ml-2">No one here yet</span>
+        )}
+      </div>
 
       <PlanningPokerRound
         user={user}
         isFacilitator={user.id === room.ownerId}
         room={room}
-        ws={ws} // Используем существующий WebSocket
+        ws={ws}
       />
 
-      <div style={{ marginTop: 20 }}>
-        <Link to="/">← Back to lobby</Link>
+      <div className="mt-6">
+        <Link to="/" className="text-blue-500 hover:underline">
+          ← Back to lobby
+        </Link>
       </div>
     </div>
   );
