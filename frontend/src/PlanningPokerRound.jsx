@@ -62,8 +62,8 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         </div>
       )}
 
-      {/* --- Фаза голосования --- */}
-      {status === "voting" && !isFacilitator && (
+      {/* --- Фаза голосования для участников --- */}
+      {!isFacilitator && status === "voting" && (
         <div className="mb-6">
           <TaskCard task={round?.task} />
           <h4 className="text-lg font-semibold mb-2">Vote</h4>
@@ -94,8 +94,8 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         </div>
       )}
 
-      {/* --- Фаза командной эффективности --- */}
-      {status === "teamEffectiveness" && !isFacilitator && (
+      {/* --- Фаза командной эффективности для участников --- */}
+      {!isFacilitator && status === "teamEffectiveness" && (
         <div className="mb-6">
           <TaskCard task={round?.task} />
           <h4 className="text-lg font-semibold mb-2">Team Effectiveness (1-7)</h4>
@@ -124,9 +124,19 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
                 {getInitials(id)}
               </div>
               <strong className="mb-1">{id}</strong>
-              <div className="text-sm">Vote: {round?.votes?.[id] ?? "-"}</div>
-              <div className="text-sm">Load: {round?.cognitiveLoad?.[id] ?? "-"}</div>
-              <div className="text-sm">Team: {round?.teamEffectiveness?.[id] ?? "-"}</div>
+              {/* Для фасилитатора показываем все результаты */}
+              {isFacilitator ? (
+                <>
+                  <div className="text-sm">Vote: {round?.votes?.[id] ?? "-"}</div>
+                  <div className="text-sm">Load: {round?.cognitiveLoad?.[id] ?? "-"}</div>
+                  <div className="text-sm">Team: {round?.teamEffectiveness?.[id] ?? "-"}</div>
+                </>
+              ) : (
+                // Для участников показываем только свой vote
+                <div className="text-sm">
+                  Vote: {round?.votes?.[id] ?? (id === user.id ? "-" : "hidden")}
+                </div>
+              )}
             </div>
           ))}
         </div>
