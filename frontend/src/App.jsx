@@ -27,6 +27,7 @@ function Lobby() {
   const [name, setName] = useState("");
   const [rooms, setRooms] = useState([]);
   const [roomName, setRoomName] = useState("");
+  const [isResearchMode, setIsResearchMode] = useState(false);
   const navigate = useNavigate();
 
   async function fetchRooms() {
@@ -50,7 +51,7 @@ function Lobby() {
 
   async function handleCreateRoom() {
     if (!roomName || !user) return;
-    await createRoom(roomName, user.id);
+    await createRoom(roomName, user.id, isResearchMode);
     setRoomName("");
     fetchRooms();
   }
@@ -92,14 +93,30 @@ function Lobby() {
       <h2 className="text-2xl font-bold mb-4">Welcome, {user.name}</h2>
 
       <div className="mb-6 p-4 bg-gray-50 rounded shadow">
-        <h3 className="text-lg font-semibold mb-2">Create Room</h3>
-        <div className="flex gap-2">
+        <h3 className="text-lg font-semibold mb-3">Create Room</h3>
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
           <input
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
             placeholder="Room name"
-            className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto"
           />
+
+          <div className="flex items-center gap-2">
+            <button
+              title="Research Mode"
+              type="button"
+              onClick={() => setIsResearchMode(!isResearchMode)}
+              className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ${isResearchMode ? "bg-indigo-600" : "bg-gray-300"
+                }`}
+            >
+              <span
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${isResearchMode ? "translate-x-6" : "translate-x-0"
+                  }`}
+              />
+            </button>
+          </div>
+
           <button
             onClick={handleCreateRoom}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"

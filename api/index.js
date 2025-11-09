@@ -57,24 +57,26 @@ app.get("/api/rooms", (req, res) => {
 });
 
 app.post("/api/rooms", (req, res) => {
-    const { name, ownerId } = req.body;
-    if (!name || !ownerId) return res.status(400).json({ error: "Missing name or ownerId" });
+  const { name, ownerId, researchMode = false } = req.body;
+  if (!name || !ownerId) return res.status(400).json({ error: "Missing name or ownerId" });
 
-    const db = readDB();
-    const owner = db.users.find(u => u.id === ownerId);
-    if (!owner) return res.status(404).json({ error: "Owner not found" });
+  const db = readDB();
+  const owner = db.users.find(u => u.id === ownerId);
+  if (!owner) return res.status(404).json({ error: "Owner not found" });
 
-    const room = {
-        id: uuidv4(),
-        name,
-        ownerId,
-        participants: [ownerId],
-        createdAt: new Date().toISOString(),
-    };
-    db.rooms.push(room);
-    writeDB(db);
+  const room = {
+    id: uuidv4(),
+    name,
+    ownerId,
+    participants: [ownerId],
+    researchMode,
+    createdAt: new Date().toISOString(),
+  };
 
-    res.status(201).json(room);
+  db.rooms.push(room);
+  writeDB(db);
+
+  res.status(201).json(room);
 });
 
 app.get("/api/rooms/:id", (req, res) => {
@@ -189,7 +191,8 @@ wss.on("connection", (ws, req) => {
                     cognitiveLoad: {},
                     teamEffectiveness: {},
                     recommendation: null,     // рекомендация от бэка
-                    recommendationVotes: {}   // лайки/дизлайки
+                    recommendationVotes: {},   // лайки/дизлайки
+                    startedAt: new Date().toISOString(),
                 };
                 room.rounds.push(newRound);
                 writeDB(db);
@@ -290,9 +293,14 @@ wss.on("connection", (ws, req) => {
                     };
 
                     const role = await getRole(context.cognitive_load, context.team_performance, context.reliance);
+                    currentRound.role = role;
                     currentRound.recommendation = await generateRecommendation(context, role);
-                } else if (currentRound.status === "recommendation") currentRound.status = "teamEffectiveness";
-                else if (currentRound.status === "teamEffectiveness") currentRound.status = "completed";
+                } else if (currentRound.status === "recommendation") {
+                    currentRound.status = "teamEffectiveness";
+                } else if (currentRound.status === "teamEffectiveness") {
+                    currentRound.status = "completed";
+                    currentRound.completedAt = new Date().toISOString();
+                }
 
                 // после генерации рекомендаций
                 const chosenIndex = await selectBestParticipant(room.participants.length);
@@ -306,6 +314,7 @@ wss.on("connection", (ws, req) => {
             case "end_round":
                 if (!currentRound || room.ownerId !== payload.userId) return;
                 currentRound.status = "completed";
+                currentRound.completedAt = new Date().toISOString();
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
                 break;

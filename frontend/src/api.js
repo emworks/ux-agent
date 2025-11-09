@@ -14,11 +14,11 @@ export async function getRooms() {
   return res.json();
 }
 
-export async function createRoom(name, ownerId) {
+export async function createRoom(name, ownerId, researchMode = false) {
   const res = await fetch(`${API}/rooms`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, ownerId }),
+    body: JSON.stringify({ name, ownerId, researchMode }),
   });
   return res.json();
 }
