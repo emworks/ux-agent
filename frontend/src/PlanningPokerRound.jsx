@@ -1,5 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 
+function getRoundStatusLabel(status) {
+  switch (status) {
+    case "ждет начала":
+    case "completed":
+      return "Ожидание старта нового раунда";
+    case "voting":
+      return "Голосование и оценка когнитивной нагрузки";
+    case "recommendation":
+      return "Голосование с рекомендацией";
+    case "teamEffectiveness":
+      return "Оценка командной эффективности";
+    default:
+      return "Неизвестный статус";
+  }
+}
+
 export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   const [round, setRound] = useState(null);
   const [taskInput, setTaskInput] = useState("");
@@ -45,7 +61,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
     <div className="bg-white shadow-xl rounded-xl p-6 mt-6 border border-gray-200 max-w-4xl mx-auto">
       <h3 className="text-3xl font-bold mb-4 text-center">Planning Poker Round</h3>
       <p className="text-gray-700 mb-6 text-center">
-        Status: <span className="font-semibold">{status}</span>
+        Status: <span className="font-semibold">{getRoundStatusLabel(status)}</span>
       </p>
 
       {/* --- Фасилитатор стартует раунд --- */}
@@ -131,7 +147,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       )}
 
       {isFacilitator ? (
-        <ParticipantsView
+        !!participants?.length && <ParticipantsView
           participants={participants}
           round={round}
           user={user}
