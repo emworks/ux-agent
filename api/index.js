@@ -10,6 +10,7 @@ import { WebSocketServer } from "ws";
 
 import { getRole } from "./src/role.js";
 import { generateRecommendation } from "./src/llm.js";
+import { selectBestParticipant, updateBandit } from "./src/bandit.js";
 
 const app = express();
 app.use(cors());
@@ -265,6 +266,12 @@ wss.on("connection", (ws, req) => {
                     broadcastRoomUpdate(roomId);
                 }
 
+                // после recommendation_vote
+                if (payload.userId === currentRound.targetUserId) {
+                    const reward = payload.like ? 1.0 : 0.0;
+                    await updateBandit(room.participants.length, chosenIndex, reward);
+                }
+
                 break;
 
             case "next_phase":
@@ -286,6 +293,11 @@ wss.on("connection", (ws, req) => {
                     currentRound.recommendation = await generateRecommendation(context, role);
                 } else if (currentRound.status === "recommendation") currentRound.status = "teamEffectiveness";
                 else if (currentRound.status === "teamEffectiveness") currentRound.status = "completed";
+
+                // после генерации рекомендаций
+                const chosenIndex = await selectBestParticipant(room.participants.length);
+                const targetUser = room.participants[chosenIndex];
+                currentRound.targetUserId = targetUser;
 
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
