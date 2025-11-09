@@ -69,11 +69,39 @@ export default function Room() {
 
       <div className="mb-6 p-4 bg-gray-50 rounded shadow">
         <strong className="text-gray-700">Participants:</strong>{" "}
-        {room.participants.length > 0 ? (
+        {room.participants?.length > 0 ? (
           <ul className="mt-2 flex flex-wrap gap-2">
             {room.participants.map((p) => (
-              <li key={p} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+              <li
+                key={p}
+                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+              >
                 {p}
+
+                {/* Кнопка удаления только для фасилитатора и не на себе */}
+                {user.id === room.ownerId && p !== user.id && (
+                  <button
+                    onClick={async () => {
+                      const confirmRemove = window.confirm(`Remove ${p} from the room?`);
+                      if (!confirmRemove) return;
+
+                      try {
+                        await leaveRoom(id, p);
+                        // После успешного удаления можно обновить локальный state:
+                        setRoom((prev) => ({
+                          ...prev,
+                          participants: prev.participants.filter((x) => x !== p),
+                        }));
+                      } catch (err) {
+                        console.error("Failed to remove participant:", err);
+                        alert("Could not remove participant. Try again.");
+                      }
+                    }}
+                    className="bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600 transition text-xs"
+                  >
+                    ×
+                  </button>
+                )}
               </li>
             ))}
           </ul>

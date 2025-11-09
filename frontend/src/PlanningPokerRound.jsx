@@ -33,15 +33,13 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 
   const status = round?.status || "ждет начала";
 
-  const participants = room.participants || [];
+  const participants = (room.participants || []).filter((p) => p !== room.ownerId);
 
   const progressVote1 = participants.length ? (Object.keys(round?.votes || {}).length / participants.length) * 100 : 0;
   const progressCl = participants.length ? (Object.keys(round?.cognitiveLoad || {}).length / participants.length) * 100 : 0;
   const progressVote2 = participants.length ? (Object.keys(round?.votes2 || {}).length / participants.length) * 100 : 0;
   const progressRecommendation = participants.length ? (Object.keys(round?.recommendationVotes || {}).length / participants.length) * 100 : 0;
   const progressTeam = participants.length ? (Object.keys(round?.teamEffectiveness || {}).length / participants.length) * 100 : 0;
-
-  const getInitials = (name) => name.slice(0, 2).toUpperCase();
 
   return (
     <div className="bg-white shadow-xl rounded-xl p-6 mt-6 border border-gray-200 max-w-4xl mx-auto">
