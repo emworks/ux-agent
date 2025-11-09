@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   const [round, setRound] = useState(null);
@@ -50,12 +50,11 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 
       {/* --- Фасилитатор стартует раунд --- */}
       {isFacilitator && (status === "ждет начала" || status === "completed") && (
-        <div className="flex justify-center gap-3 mb-6">
-          <input
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <AutoResizingTextarea
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
             placeholder="Task description"
-            className="border border-gray-300 rounded-full px-4 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
           />
           <button
             onClick={startRound}
@@ -68,18 +67,21 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 
       {/* --- Vote 1 --- */}
       {status === "voting" && (
-        <VotePhase
-          title="Vote 1"
-          participants={participants}
-          handleVote={(sp) => handleVote(sp, 1)}
-          votes={round?.votes}
-          progress={progressVote1}
-          progress2={progressCl}
-          showCognitiveLoad
-          cognitiveLoad={round?.cognitiveLoad}
-          handleCognitiveLoad={handleCognitiveLoad}
-          isFacilitator={isFacilitator}
-        />
+        <>
+          <TaskCard task={round?.task} />
+          <VotePhase
+            title="Vote 1"
+            participants={participants}
+            handleVote={(sp) => handleVote(sp, 1)}
+            votes={round?.votes}
+            progress={progressVote1}
+            progress2={progressCl}
+            showCognitiveLoad
+            cognitiveLoad={round?.cognitiveLoad}
+            handleCognitiveLoad={handleCognitiveLoad}
+            isFacilitator={isFacilitator}
+          />
+        </>
       )}
 
       {/* --- Vote 2 с рекомендацией --- */}
@@ -399,5 +401,34 @@ function TeamVotesView({ participants, round, user }) {
         })}
       </div>
     </div>
+  );
+}
+
+function AutoResizingTextarea({ value, onChange, placeholder, className }) {
+  const textareaRef = useRef(null);
+
+  // Подстраиваем высоту под контент
+  const autoResize = () => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto"; // сброс текущей высоты
+      el.style.height = el.scrollHeight + "px"; // новая высота
+    }
+  };
+
+  useEffect(() => autoResize(), [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={(e) => {
+        onChange(e);
+        autoResize();
+      }}
+      placeholder={placeholder}
+      className={`border border-gray-300 rounded-lg px-4 py-2 w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 overflow-hidden transition-all ${className}`}
+      rows={1}
+    />
   );
 }
