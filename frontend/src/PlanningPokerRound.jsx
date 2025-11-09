@@ -69,6 +69,11 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {status === "voting" && (
         <>
           <TaskCard task={round?.task} />
+          {round?.loadingRecommendation && (
+            <div className="text-center text-gray-500 py-2">
+              ⏳ Generating recommendation...
+            </div>
+          )}
           <VotePhase
             title="Vote 1"
             participants={participants}
@@ -410,7 +415,7 @@ function AutoResizingTextarea({ value, onChange, placeholder, className }) {
   // Подстраиваем высоту под контент
   const autoResize = () => {
     const el = textareaRef.current;
-    if (el) {
+    if (el && el.value) {
       el.style.height = "auto"; // сброс текущей высоты
       el.style.height = el.scrollHeight + "px"; // новая высота
     }

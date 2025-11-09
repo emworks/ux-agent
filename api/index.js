@@ -280,6 +280,11 @@ wss.on("connection", (ws, req) => {
             case "next_phase":
                 if (!currentRound || room.ownerId !== payload.userId) return;
 
+                // включаем лоадер для фронта
+                currentRound.loadingRecommendation = true;
+                writeDB(db);
+                broadcastRoundUpdate(roomId, currentRound);
+
                 if (currentRound.status === "voting") {
                     // Генерируем рекомендацию для второго голосования
                     currentRound.status = "recommendation";
@@ -311,6 +316,9 @@ wss.on("connection", (ws, req) => {
                     const targetUser = room.participants[chosenIndex];
                     currentRound.targetUserId = targetUser;
                 }
+
+                // выключаем лоадер
+                currentRound.loadingRecommendation = false;
 
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
