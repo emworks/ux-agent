@@ -27,8 +27,13 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       if (message.type === "round_update") setRound(message.round);
     };
     ws.addEventListener("message", handleMessage);
+
+    // --- подгрузка последнего активного раунда при монтировании ---
+    const currentRound = room.rounds?.pop();
+    setRound(currentRound || null);
+
     return () => ws.removeEventListener("message", handleMessage);
-  }, [ws]);
+  }, [ws, room]);
 
   const sendAction = (action, payload) => {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action, payload }));
