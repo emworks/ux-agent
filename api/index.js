@@ -180,6 +180,7 @@ wss.on("connection", (ws, req) => {
         const { action, payload } = JSON.parse(raw);
         const db = readDB();
         const room = db.rooms.find(r => r.id === roomId);
+
         if (!room) return;
 
         // Гарантируем, что поле rounds существует
@@ -193,27 +194,30 @@ wss.on("connection", (ws, req) => {
                 const newRound = {
                     id: uuidv4(),
                     task: payload.task,
-                    status: "voting", // первый этап голосования
+                    status: "cognitive_load", // первый этап голосования
+                    cognitiveLoad: {},
                     votes: {},
                     votes2: {},               // второй голос
-                    cognitiveLoad: {},
+                    votes3: {},
                     teamEffectiveness: {},
                     recommendation: null,     // рекомендация от бэка
                     recommendationVotes: {},   // лайки/дизлайки
                     startedAt: new Date().toISOString(),
                 };
                 room.rounds.push(newRound);
+
                 writeDB(db);
                 broadcastRoundUpdate(roomId, newRound);
                 break;
 
             case "vote":
                 if (payload.userId === room.ownerId) return;
-                if (!currentRound || !["voting", "recommendation"].includes(currentRound.status)) return;
+                if (!currentRound || !["voting", "recommendation", "final_voting"].includes(currentRound.status)) return;
                 if (!room.participants.includes(payload.userId)) return;
 
                 if (payload.voteNumber === 1) currentRound.votes[payload.userId] = payload.storyPoints;
                 else if (payload.voteNumber === 2) currentRound.votes2[payload.userId] = payload.storyPoints;
+                else if (payload.voteNumber === 3) currentRound.votes3[payload.userId] = payload.storyPoints;
 
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
@@ -221,7 +225,7 @@ wss.on("connection", (ws, req) => {
 
             case "cognitive_load":
                 if (payload.userId === room.ownerId) return;
-                if (!currentRound || currentRound.status !== "voting") return;
+                if (!currentRound || currentRound.status !== "cognitive_load") return;
                 if (!room.participants.includes(payload.userId)) return;
                 currentRound.cognitiveLoad[payload.userId] = payload.load;
                 writeDB(db);
@@ -293,8 +297,12 @@ wss.on("connection", (ws, req) => {
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
 
-                if (currentRound.status === "voting") {
-                    // Генерируем рекомендацию для второго голосования
+                if (currentRound.status === "cognitive_load") {
+                    currentRound.status = "voting";
+                } else if (currentRound.status === "voting") {
+                    currentRound.status = "voting_discussion";
+                } else if (currentRound.status === "voting_discussion") {
+                    // Генерируем рекомендацию для второго голосования, пока идет обсуждение
                     currentRound.status = "recommendation";
 
                     const context = {
@@ -312,6 +320,10 @@ wss.on("connection", (ws, req) => {
 
                     currentRound.recommendation = await generateRecommendation(context, currentRound.role);
                 } else if (currentRound.status === "recommendation") {
+                    currentRound.status = "recommendation_discussion";
+                } else if (currentRound.status === "recommendation_discussion") {
+                    currentRound.status = "final_voting";
+                } else if (currentRound.status === "final_voting") {
                     currentRound.status = "teamEffectiveness";
                 } else if (currentRound.status === "teamEffectiveness") {
                     currentRound.status = "completed";
@@ -354,7 +366,6 @@ wss.on("connection", (ws, req) => {
                 };
 
                 // Сохраняем в DB
-                const db = readDB();
                 db.messages = db.messages || [];
                 db.messages.push(newMsg);
                 writeDB(db);

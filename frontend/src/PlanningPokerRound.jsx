@@ -5,10 +5,18 @@ function getRoundStatusLabel(status) {
     case "ждет начала":
     case "completed":
       return "Ожидание старта нового раунда";
+    case "cognitive_load":
+      return "Оценка когнитивной нагрузки";
     case "voting":
-      return "Голосование и оценка когнитивной нагрузки";
+      return "Голосование";
+    case "voting_discussion":
+      return "Обсуждение результатов голосования";
     case "recommendation":
-      return "Голосование с рекомендацией";
+      return "Повторное голосование";
+    case "recommendation_discussion":
+      return "Обсуждение результатов повторного голосования";
+    case "final_voting":
+      return "Финальное голосование";
     case "teamEffectiveness":
       return "Оценка командной эффективности";
     default:
@@ -59,6 +67,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   const progressVote1 = participants.length ? (Object.keys(round?.votes || {}).length / participants.length) * 100 : 0;
   const progressCl = participants.length ? (Object.keys(round?.cognitiveLoad || {}).length / participants.length) * 100 : 0;
   const progressVote2 = participants.length ? (Object.keys(round?.votes2 || {}).length / participants.length) * 100 : 0;
+  const progressVote3 = participants.length ? (Object.keys(round?.votes3 || {}).length / participants.length) * 100 : 0
   const progressRecommendation = participants.length ? (Object.keys(round?.recommendationVotes || {}).length / participants.length) * 100 : 0;
   const progressTeam = participants.length ? (Object.keys(round?.teamEffectiveness || {}).length / participants.length) * 100 : 0;
 
@@ -86,6 +95,23 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         </div>
       )}
 
+
+      {/* --- Cognitive Load --- */}
+      {status === "cognitive_load" && (
+        <>
+          <TaskCard task={round?.task} />
+          <VotePhase
+            title="Cognitive Load"
+            participants={participants}
+            progress2={progressCl}
+            showCognitiveLoad
+            cognitiveLoad={round?.cognitiveLoad}
+            handleCognitiveLoad={handleCognitiveLoad}
+            isFacilitator={isFacilitator}
+          />
+        </>
+      )}
+
       {/* --- Vote 1 --- */}
       {status === "voting" && (
         <>
@@ -101,12 +127,27 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             handleVote={(sp) => handleVote(sp, 1)}
             votes={round?.votes}
             progress={progressVote1}
-            progress2={progressCl}
-            showCognitiveLoad
-            cognitiveLoad={round?.cognitiveLoad}
-            handleCognitiveLoad={handleCognitiveLoad}
             isFacilitator={isFacilitator}
           />
+        </>
+      )}
+
+      {/* --- Vote 1 Discussion --- */}
+      {status === "voting_discussion" && (
+        <>
+          <TaskCard task={round?.task} />
+          {round?.loadingRecommendation && (
+            <div className="text-center text-gray-500 py-2">
+              ⏳ Generating recommendation...
+            </div>
+          )}
+          {!isFacilitator && (
+            <TeamVotesView
+              participants={participants}
+              round={round}
+              user={user}
+            />
+          )}
         </>
       )}
 
@@ -119,14 +160,6 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
               Recommendation: <span className="font-medium">{round.recommendation}</span>
             </div>
           )}
-          <VotePhase
-            title="Vote 2"
-            participants={participants}
-            handleVote={(sp) => handleVote(sp, 2)}
-            votes={round?.votes2}
-            progress={progressVote2}
-            isFacilitator={isFacilitator}
-          />
           <h4 className="text-lg font-semibold mb-2">Do you agree with recommendation?</h4>
           {!isFacilitator && (
             <div className="flex gap-4 justify-center mb-2">
@@ -135,7 +168,44 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             </div>
           )}
           <ProgressBar progress={progressRecommendation} color="blue" label={`${Object.keys(round?.recommendationVotes || {}).length}/${participants.length} voted`} />
+          <VotePhase
+            title="Vote 2"
+            participants={participants}
+            handleVote={(sp) => handleVote(sp, 2)}
+            votes={round?.votes2}
+            progress={progressVote2}
+            isFacilitator={isFacilitator}
+          />
         </div>
+      )}
+
+      {/* --- Vote 2 Discussion --- */}
+      {status === "recommendation_discussion" && (
+        <>
+          <TaskCard task={round?.task} />
+          {!isFacilitator && (
+            <TeamVotesView
+              participants={participants}
+              round={round}
+              user={user}
+            />
+          )}
+        </>
+      )}
+
+      {/* --- Vote 3 --- */}
+      {status === "final_voting" && (
+        <>
+          <TaskCard task={round?.task} />
+          <VotePhase
+            title="Final Vote"
+            participants={participants}
+            handleVote={(sp) => handleVote(sp, 3)}
+            votes={round?.votes3}
+            progress={progressVote3}
+            isFacilitator={isFacilitator}
+          />
+        </>
       )}
 
       {/* --- Team Effectiveness --- */}
@@ -151,18 +221,12 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         />
       )}
 
-      {isFacilitator ? (
+      {isFacilitator && status !== "completed" && (
         !!participants?.length && <ParticipantsView
           participants={participants}
           round={round}
           user={user}
           isFacilitator={true}
-        />
-      ) : (
-        <TeamVotesView
-          participants={participants}
-          round={round}
-          user={user}
         />
       )}
 
@@ -197,15 +261,19 @@ function VotePhase({
 }) {
   return (
     <div className="mb-6">
-      <h4 className="text-lg font-semibold mb-2">{title}</h4>
-      {!isFacilitator && (
-        <div className="flex flex-wrap gap-3 mb-4 justify-center">
-          {options.map((val) => (
-            <button key={val} onClick={() => handleVote(val)} className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition shadow-sm">{val}</button>
-          ))}
-        </div>
+      {!showCognitiveLoad && (
+        <>
+          <h4 className="text-lg font-semibold mb-2">{title}</h4>
+          {!isFacilitator && (
+            <div className="flex flex-wrap gap-3 mb-4 justify-center">
+              {options.map((val) => (
+                <button key={val} onClick={() => handleVote(val)} className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition shadow-sm">{val}</button>
+              ))}
+            </div>
+          )}
+          <ProgressBar progress={progress} color="green" label={`${votes ? Object.keys(votes).length : 0}/${participants.length} voted`} />
+        </>
       )}
-      <ProgressBar progress={progress} color="green" label={`${votes ? Object.keys(votes).length : 0}/${participants.length} voted`} />
       {showCognitiveLoad && (
         <div>
           <h4 className="text-lg font-semibold mb-2">Cognitive Load (1-7)</h4>
@@ -291,6 +359,9 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
 
               {isFacilitator ? (
                 <>
+                  <div className={`text-sm ${getLoadColor(round?.cognitiveLoad?.[id])}`}>
+                    Load: {round?.cognitiveLoad?.[id] ?? "-"}
+                  </div>
                   <div className="text-sm">Vote 1: {round?.votes?.[id] ?? "-"}</div>
                   <div className="text-sm">Vote 2: {round?.votes2?.[id] ?? "-"}</div>
                   <div className="text-sm">
@@ -301,16 +372,19 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                         : "👎"
                       : "-"}
                   </div>
+                  <div className="text-sm">Vote 3: {round?.votes3?.[id] ?? "-"}</div>
                   <div className={`text-sm ${getTeamColor(round?.teamEffectiveness?.[id])}`}>
                     Team: {round?.teamEffectiveness?.[id] ?? "-"}
-                  </div>
-                  <div className={`text-sm ${getLoadColor(round?.cognitiveLoad?.[id])}`}>
-                    Load: {round?.cognitiveLoad?.[id] ?? "-"}
                   </div>
                 </>
               ) : (
                 id === user.id && (
                   <>
+                    {round?.cognitiveLoad?.[id] !== undefined && (
+                      <div className={`text-sm ${getLoadColor(round.cognitiveLoad[id])}`}>
+                        Load: {round.cognitiveLoad[id]}
+                      </div>
+                    )}
                     {round?.votes?.[id] !== undefined && <div className="text-sm">Vote 1: {round.votes[id]}</div>}
                     {round?.votes2?.[id] !== undefined && <div className="text-sm">Vote 2: {round.votes2[id]}</div>}
                     {round?.recommendationVotes?.[id] !== undefined && (
@@ -318,14 +392,10 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                         Recommendation: {round.recommendationVotes[id] ? "👍" : "👎"}
                       </div>
                     )}
+                    {round?.votes3?.[id] !== undefined && <div className="text-sm">Vote 3: {round.votes3[id]}</div>}
                     {round?.teamEffectiveness?.[id] !== undefined && (
                       <div className={`text-sm ${getTeamColor(round.teamEffectiveness[id])}`}>
                         Team: {round.teamEffectiveness[id]}
-                      </div>
-                    )}
-                    {round?.cognitiveLoad?.[id] !== undefined && (
-                      <div className={`text-sm ${getLoadColor(round.cognitiveLoad[id])}`}>
-                        Load: {round.cognitiveLoad[id]}
                       </div>
                     )}
                   </>
@@ -341,17 +411,21 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
             <thead className="bg-gray-100 text-gray-600">
               <tr>
                 <th className="px-4 py-2 text-left">Participant</th>
+                <th className="px-4 py-2 text-center">Load</th>
                 <th className="px-4 py-2 text-center">Vote 1</th>
                 <th className="px-4 py-2 text-center">Vote 2</th>
                 <th className="px-4 py-2 text-center">Recommendation</th>
+                <th className="px-4 py-2 text-center">Vote 3</th>
                 <th className="px-4 py-2 text-center">Team</th>
-                <th className="px-4 py-2 text-center">Load</th>
               </tr>
             </thead>
             <tbody>
               {participants.map((id, i) => (
                 <tr key={id} className={i % 2 ? "bg-white" : "bg-gray-50"}>
                   <td className="px-4 py-2 font-medium">{id}</td>
+                  <td className={`px-4 py-2 text-center ${getLoadColor(round?.cognitiveLoad?.[id])}`}>
+                    {round?.cognitiveLoad?.[id] ?? "-"}
+                  </td>
                   <td className="px-4 py-2 text-center">{round?.votes?.[id] ?? "-"}</td>
                   <td className="px-4 py-2 text-center">{round?.votes2?.[id] ?? "-"}</td>
                   <td className="px-4 py-2 text-center">
@@ -361,11 +435,9 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                         : "👎"
                       : "-"}
                   </td>
+                  <td className="px-4 py-2 text-center">{round?.votes3?.[id] ?? "-"}</td>
                   <td className={`px-4 py-2 text-center ${getTeamColor(round?.teamEffectiveness?.[id])}`}>
                     {round?.teamEffectiveness?.[id] ?? "-"}
-                  </td>
-                  <td className={`px-4 py-2 text-center ${getLoadColor(round?.cognitiveLoad?.[id])}`}>
-                    {round?.cognitiveLoad?.[id] ?? "-"}
                   </td>
                 </tr>
               ))}
@@ -395,6 +467,7 @@ function TeamVotesView({ participants, round, user }) {
         {participants.map((id) => {
           const vote1 = round?.votes?.[id];
           const vote2 = round?.votes2?.[id];
+          const vote3 = round?.votes3?.[id];
 
           return (
             <div
@@ -420,6 +493,11 @@ function TeamVotesView({ participants, round, user }) {
                   className={`text-sm text-center py-1 rounded-xl ${getVoteColor(vote2)}`}
                 >
                   Vote 2: {vote2 ?? "–"}
+                </div>
+                <div
+                  className={`text-sm text-center py-1 rounded-xl ${getVoteColor(vote3)}`}
+                >
+                  Vote 3: {vote3 ?? "–"}
                 </div>
               </div>
             </div>
