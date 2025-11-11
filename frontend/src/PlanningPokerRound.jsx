@@ -40,7 +40,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 
   const status = round?.status || "ждет начала";
 
-  const participants = (room.participants || []).filter((p) => p !== room.ownerId);
+  const participants = (room.participants || []).filter(({ id }) => id !== room.ownerId);
 
   const progressVote1 = participants.length ? (Object.keys(round?.votes || {}).length / participants.length) * 100 : 0;
   const progressCl = participants.length ? (Object.keys(round?.cognitiveLoad || {}).length / participants.length) * 100 : 0;
@@ -56,14 +56,14 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   }, [round?.recommendationVotes]);
 
   return (
-    <div className="bg-white max-w-4xl mx-auto">
+    <div className="bg-white max-w-4xl mx-auto px-1">
       <p className="text-gray-700 mb-6 text-center">
         <span className="font-semibold">{getRoundStatusLabel(status)}</span>
       </p>
 
       {/* --- Фасилитатор стартует раунд --- */}
       {isFacilitator && (status === "ждет начала" || status === "completed") && (
-        <div className="flex flex items-end gap-2 mb-6 px-1">
+        <div className="flex flex items-end gap-2 mb-6">
           <AutoResizingTextarea
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
@@ -154,18 +154,18 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             <>
               <h4 className="text-lg font-semibold mb-2">Рекомендация была полезна?</h4>
               {!isFacilitator && (
-                <div className="flex gap-4 justify-center mb-4 p-10">
+                <div className="flex gap-4 justify-center mb-4 p-10 text-xl">
                   <button onClick={() => {
                     setSelectedRecommendation(true);
                     handleRecommendationVote(true);
-                  }} className={`px-3 py-1 rounded-full shadow-sm transition
+                  }} className={`px-3 py-2 rounded-full shadow-sm transition
       ${selectedRecommendation === true
                       ? "bg-blue-600 text-white ring-2 ring-blue-400"
                       : "bg-blue-500 text-white hover:bg-blue-600"}`}>👍</button>
                   <button onClick={() => {
                     setSelectedRecommendation(false);
                     handleRecommendationVote(false)
-                  }} className={`px-3 py-1 rounded-full shadow-sm transition
+                  }} className={`px-3 py-2 rounded-full shadow-sm transition
       ${selectedRecommendation === false
                       ? "bg-red-600 text-white ring-2 ring-red-400"
                       : "bg-red-500 text-white hover:bg-red-600"}`}>👎</button>
