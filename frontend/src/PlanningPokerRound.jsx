@@ -68,7 +68,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   const progressCl = participants.length ? (Object.keys(round?.cognitiveLoad || {}).length / participants.length) * 100 : 0;
   const progressVote2 = participants.length ? (Object.keys(round?.votes2 || {}).length / participants.length) * 100 : 0;
   const progressVote3 = participants.length ? (Object.keys(round?.votes3 || {}).length / participants.length) * 100 : 0
-  const progressRecommendation = participants.length ? (Object.keys(round?.recommendationVotes || {}).length / participants.length) * 100 : 0;
+  const progressRecommendation = participants.length ? (Object.keys(round?.recommendationVotes || {}).length / 1) * 100 : 0;
   const progressTeam = participants.length ? (Object.keys(round?.teamEffectiveness || {}).length / participants.length) * 100 : 0;
 
   return (
@@ -116,11 +116,6 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {status === "voting" && (
         <>
           <TaskCard task={round?.task} />
-          {round?.loadingRecommendation && (
-            <div className="text-center text-gray-500 py-2">
-              ⏳ Generating recommendation...
-            </div>
-          )}
           <VotePhase
             title="Vote 1"
             participants={participants}
@@ -155,19 +150,28 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {status === "recommendation" && (
         <div className="mb-6">
           <TaskCard task={round?.task} />
-          {round?.recommendation && (
+          {(isFacilitator || user.id === round?.targetUserId) && round?.recommendation && (
             <div className="bg-yellow-100 p-4 rounded mb-4 text-center">
               Recommendation: <span className="font-medium">{round.recommendation}</span>
             </div>
           )}
-          <h4 className="text-lg font-semibold mb-2">Do you agree with recommendation?</h4>
-          {!isFacilitator && (
-            <div className="flex gap-4 justify-center mb-2">
-              <button onClick={() => handleRecommendationVote(true)} className="bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 shadow-sm">👍</button>
-              <button onClick={() => handleRecommendationVote(false)} className="bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600 shadow-sm">👎</button>
-            </div>
+
+          {/* Голосовать могут только targetUserId */}
+          {(isFacilitator || user.id === round?.targetUserId) && (
+            <>
+              <h4 className="text-lg font-semibold mb-2">Do you agree with recommendation?</h4>
+              {!isFacilitator && (
+                <div className="flex gap-4 justify-center mb-2">
+                  <button onClick={() => handleRecommendationVote(true)} className="bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 shadow-sm">👍</button>
+                  <button onClick={() => handleRecommendationVote(false)} className="bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600 shadow-sm">👎</button>
+                </div>
+              )}
+              <div className="mb-2">
+                <ProgressBar progress={progressRecommendation} color="blue" />
+              </div>
+            </>
           )}
-          <ProgressBar progress={progressRecommendation} color="blue" label={`${Object.keys(round?.recommendationVotes || {}).length}/${participants.length} voted`} />
+
           <VotePhase
             title="Vote 2"
             participants={participants}

@@ -331,12 +331,14 @@ wss.on("connection", (ws, req) => {
                     currentRound.completedAt = new Date().toISOString();
                 }
 
-                if (room.researchMode) {
-                    // после генерации рекомендаций
-                    const chosenIndex = await selectBestParticipant(room.participants.length);
-                    const targetUser = room.participants[chosenIndex];
-                    currentRound.targetUserId = targetUser;
-                }
+                const eligibleParticipants = room.participants.filter(p => p !== room.ownerId);
+
+                // 🧠 Режим исследования — выбираем "лучшего" участника
+                // 🎲 Обычный режим — выбираем случайного участника
+                const idx = room.researchMode ? await selectBestParticipant(eligibleParticipants.length) : Math.floor(Math.random() * eligibleParticipants.length);
+
+                const targetUser = eligibleParticipants[idx];
+                currentRound.targetUserId = targetUser;
 
                 // выключаем лоадер
                 currentRound.loadingRecommendation = false;
