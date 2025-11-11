@@ -284,7 +284,7 @@ wss.on("connection", (ws, req) => {
                 // после recommendation_vote
                 if (payload.userId === currentRound.targetUserId) {
                     const reward = payload.like ? 1.0 : 0.0;
-                    await updateBandit(room.participants.length, chosenIndex, reward);
+                    // await updateBandit(room.participants.length, chosenIndex, reward);
                 }
 
                 break;
