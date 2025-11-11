@@ -100,7 +100,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <>
           <TaskCard task={round?.task} />
           <VotePhase
-            title="Сложность задачи"
+            title="Оцените сложность задачи в Story Points"
             participants={participants}
             handleVote={(sp) => handleVote(sp, 1)}
             votes={round?.votes}
@@ -135,17 +135,25 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <div className="mb-6">
           <TaskCard task={round?.task} />
           {(isFacilitator || user.id === round?.targetUserId) && round?.recommendation && (
-            <div className="bg-yellow-100 p-4 rounded mb-4 text-center whitespace-pre-wrap ">
-              Рекомендация от AI: <span className="font-medium">{round.recommendation}</span>
-            </div>
+            <RecommendationCard recommendation={round.recommendation}/>
           )}
+
+          <VotePhase
+            title="Оцените сложность задачи в Story Points"
+            participants={participants}
+            handleVote={(sp) => handleVote(sp, 2)}
+            votes={round?.votes2}
+            progress={progressVote2}
+            isFacilitator={isFacilitator}
+            user={user}
+          />
 
           {/* Голосовать могут только targetUserId */}
           {(isFacilitator || user.id === round?.targetUserId) && (
             <>
-              <h4 className="text-lg font-semibold mb-2">Рекомендация полезна?</h4>
+              <h4 className="text-lg font-semibold mb-2">Рекомендация была полезна?</h4>
               {!isFacilitator && (
-                <div className="flex gap-4 justify-center mb-2">
+                <div className="flex gap-4 justify-center mb-4">
                   <button onClick={() => {
                     setSelectedRecommendation(true);
                     handleRecommendationVote(true);
@@ -167,16 +175,6 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
               </div>
             </>
           )}
-
-          <VotePhase
-            title="Сложность задачи"
-            participants={participants}
-            handleVote={(sp) => handleVote(sp, 2)}
-            votes={round?.votes2}
-            progress={progressVote2}
-            isFacilitator={isFacilitator}
-            user={user}
-          />
         </div>
       )}
 
@@ -199,7 +197,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <>
           <TaskCard task={round?.task} />
           <VotePhase
-            title="Сложность задачи"
+            title="Оцените сложность задачи в Story Points"
             participants={participants}
             handleVote={(sp) => handleVote(sp, 3)}
             votes={round?.votes3}
@@ -213,7 +211,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {/* --- Team Effectiveness --- */}
       {status === "teamEffectiveness" && (
         <VotePhase
-          title="Эффективность команды"
+          title="Насколько эффективно команда справилась с задачей? (1 – совсем неэффективно, 7 – очень эффективно)"
           participants={participants}
           votes={round?.teamEffectiveness}
           progress={progressTeam}
@@ -297,7 +295,9 @@ function VotePhase({
       )}
       {showCognitiveLoad && (
         <div>
-          <h4 className="text-lg font-semibold mb-2">Когнитивная нагрузка (1-7)</h4>
+          <h4 className="text-lg font-semibold mb-2">
+            Насколько сложно было оценить задачу? (1 – совсем не сложно, 7 – крайне сложно)
+          </h4>
           {!isFacilitator && (
             <div className="flex flex-wrap gap-2 mb-2 justify-center">
               {[1, 2, 3, 4, 5, 6, 7].map(cl => (
@@ -336,6 +336,16 @@ function TaskCard({ task }) {
     <div className="bg-gray-100 text-gray-800 p-4 rounded-lg mb-4 shadow-sm">
       <h3 className="text-sm uppercase text-gray-500 mb-2">Задача</h3>
       <div className="whitespace-pre-wrap font-medium">{task}</div>
+    </div>
+  );
+}
+
+function RecommendationCard({ recommendation }) {
+  if (!recommendation) return null;
+  return (
+    <div className="bg-yellow-100 p-4 rounded-lg mb-4 shadow-sm">
+      <h3 className="text-sm uppercase text-gray-500 mb-2">Рекомендация от AI</h3>
+      <div className="whitespace-pre-wrap font-medium">{recommendation}</div>
     </div>
   );
 }
@@ -405,7 +415,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                   </div>
                   <div className="text-sm">Vote 3: {round?.votes3?.[pid] ?? "-"}</div>
                   <div className={`text-sm ${getTeamColor(round?.teamEffectiveness?.[pid])}`}>
-                      Perf: {round?.teamEffectiveness?.[pid] ?? "-"}
+                    Perf: {round?.teamEffectiveness?.[pid] ?? "-"}
                   </div>
                 </>
               ) : (

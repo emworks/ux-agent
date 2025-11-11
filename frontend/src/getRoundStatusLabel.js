@@ -3,10 +3,10 @@ export default function getRoundStatusLabel(status) {
         case "ждет начала":
         case "completed":
             return "Ожидание старта нового раунда";
-        case "cognitive_load":
-            return "1/7: Оценка когнитивной нагрузки";
         case "voting":
-            return "2/7: Голосование";
+            return "1/7: Голосование";
+        case "cognitive_load":
+            return "2/7: Оценка когнитивной нагрузки";
         case "voting_discussion":
             return "3/7: Обсуждение результатов голосования";
         case "recommendation":

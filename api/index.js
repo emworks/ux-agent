@@ -201,7 +201,7 @@ wss.on("connection", (ws, req) => {
                 const newRound = {
                     id: uuidv4(),
                     task: payload.task,
-                    status: "cognitive_load", // первый этап голосования
+                    status: "voting", // первый этап голосования
                     cognitiveLoad: {},
                     votes: {},
                     votes2: {},               // второй голос
@@ -304,9 +304,9 @@ wss.on("connection", (ws, req) => {
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
 
-                if (currentRound.status === "cognitive_load") {
-                    currentRound.status = "voting";
-                } else if (currentRound.status === "voting") {
+                if (currentRound.status === "voting") {
+                    currentRound.status = "cognitive_load";
+                } else if (currentRound.status === "cognitive_load") {
                     currentRound.status = "voting_discussion";
                 } else if (currentRound.status === "voting_discussion") {
                     // Генерируем рекомендацию для второго голосования, пока идет обсуждение
