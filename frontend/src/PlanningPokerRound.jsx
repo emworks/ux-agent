@@ -49,6 +49,12 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   const progressRecommendation = participants.length ? (Object.keys(round?.recommendationVotes || {}).length / 1) * 100 : 0;
   const progressTeam = participants.length ? (Object.keys(round?.teamEffectiveness || {}).length / participants.length) * 100 : 0;
 
+  const [selectedRecommendation, setSelectedRecommendation] = useState(null);
+
+  useEffect(() => {
+    setSelectedRecommendation(round?.recommendationVotes?.[user.id] ?? null);
+  }, [round?.recommendationVotes]);
+
   return (
     <div className="bg-white shadow-xl rounded-xl p-6 border border-gray-200 max-w-4xl mx-auto">
       <h3 className="text-3xl font-bold mb-4 text-center">Planning Poker</h3>
@@ -85,6 +91,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             cognitiveLoad={round?.cognitiveLoad}
             handleCognitiveLoad={handleCognitiveLoad}
             isFacilitator={isFacilitator}
+            user={user}
           />
         </>
       )}
@@ -100,6 +107,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             votes={round?.votes}
             progress={progressVote1}
             isFacilitator={isFacilitator}
+            user={user}
           />
         </>
       )}
@@ -139,8 +147,20 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
               <h4 className="text-lg font-semibold mb-2">Do you agree with recommendation?</h4>
               {!isFacilitator && (
                 <div className="flex gap-4 justify-center mb-2">
-                  <button onClick={() => handleRecommendationVote(true)} className="bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 shadow-sm">👍</button>
-                  <button onClick={() => handleRecommendationVote(false)} className="bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600 shadow-sm">👎</button>
+                  <button onClick={() => {
+                    setSelectedRecommendation(true);
+                    handleRecommendationVote(true);
+                  }} className={`px-3 py-1 rounded-full shadow-sm transition
+      ${selectedRecommendation === true
+                      ? "bg-blue-600 text-white ring-2 ring-blue-400"
+                      : "bg-blue-500 text-white hover:bg-blue-600"}`}>👍</button>
+                  <button onClick={() => {
+                    setSelectedRecommendation(false);
+                    handleRecommendationVote(false)
+                  }} className={`px-3 py-1 rounded-full shadow-sm transition
+      ${selectedRecommendation === false
+                      ? "bg-red-600 text-white ring-2 ring-red-400"
+                      : "bg-red-500 text-white hover:bg-red-600"}`}>👎</button>
                 </div>
               )}
               <div className="mb-2">
@@ -156,6 +176,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             votes={round?.votes2}
             progress={progressVote2}
             isFacilitator={isFacilitator}
+            user={user}
           />
         </div>
       )}
@@ -185,6 +206,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             votes={round?.votes3}
             progress={progressVote3}
             isFacilitator={isFacilitator}
+            user={user}
           />
         </>
       )}
@@ -199,6 +221,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
           options={[1, 2, 3, 4, 5, 6, 7]}
           handleVote={handleTeamEffectiveness}
           isFacilitator={isFacilitator}
+          user={user}
         />
       )}
 
@@ -234,12 +257,24 @@ function VotePhase({
   votes,
   progress,
   progress2,
-  options = [1, 2, 3, 5, 8],
+  options = [1, 2, 3, 5, 8, 13],
   showCognitiveLoad,
   cognitiveLoad,
   handleCognitiveLoad,
   isFacilitator,
+  user
 }) {
+  const [selectedVote, setSelectedVote] = useState(null);
+  const [selectedLoad, setSelectedLoad] = useState(null);
+
+  useEffect(() => {
+    setSelectedVote(votes?.[user.id] ?? null);
+  }, [votes]);
+
+  useEffect(() => {
+    setSelectedLoad(cognitiveLoad?.[user.id] ?? null);
+  }, [cognitiveLoad]);
+
   return (
     <div className="mb-6">
       {!showCognitiveLoad && (
@@ -248,7 +283,13 @@ function VotePhase({
           {!isFacilitator && (
             <div className="flex flex-wrap gap-3 mb-4 justify-center">
               {options.map((val) => (
-                <button key={val} onClick={() => handleVote(val)} className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition shadow-sm">{val}</button>
+                <button key={val} onClick={() => {
+                  setSelectedVote(val);
+                  handleVote(val);
+                }} className={`px-4 py-2 rounded-full shadow-sm transition
+    ${selectedVote === val
+                    ? "bg-green-600 text-white ring-2 ring-green-400"
+                    : "bg-green-500 text-white hover:bg-green-600"}`}>{val}</button>
               ))}
             </div>
           )}
@@ -261,7 +302,13 @@ function VotePhase({
           {!isFacilitator && (
             <div className="flex flex-wrap gap-2 mb-2 justify-center">
               {[1, 2, 3, 4, 5, 6, 7].map(cl => (
-                <button key={cl} onClick={() => handleCognitiveLoad(cl)} className="bg-yellow-400 text-black px-3 py-1 rounded-full hover:bg-yellow-500 transition shadow-sm">{cl}</button>
+                <button key={cl} onClick={() => {
+                  setSelectedLoad(cl);
+                  handleCognitiveLoad(cl);
+                }} className={`px-3 py-1 rounded-full transition shadow-sm
+    ${selectedLoad === cl
+                    ? "bg-yellow-500 text-black ring-2 ring-yellow-400"
+                    : "bg-yellow-400 hover:bg-yellow-500 text-black"}`}>{cl}</button>
               ))}
             </div>
           )}
