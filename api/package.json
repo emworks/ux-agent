@@ -1,5 +1,5 @@
 {
-  "name": "ux-agent-api",
+  "name": "ux-agent-planning-poker-api",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",

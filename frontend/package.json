@@ -1,5 +1,5 @@
 {
-  "name": "ux-agent-client",
+  "name": "ux-agent-planning-poker-client",
   "version": "1.0.0",
   "private": true,
   "scripts": {
