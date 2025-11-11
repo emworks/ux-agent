@@ -63,8 +63,8 @@ export default function Chat({ user, room, ws }) {
       <div className="flex-1 overflow-y-auto mb-2">
         {messages.map((m) => (
           <div key={m.id} className={`mb-2 ${m.userId === user.id ? "text-right" : "text-left"}`}>
-            <span style={{ color: getUserColor(m.userId), fontWeight: 500 }}>
-              {m.userId}
+            <span style={{ color: getUserColor(m.userName), fontWeight: 500 }}>
+              {m.userName}
             </span>
             {m.roundId && (
               <span className="text-xs text-gray-400 ml-1">[R {m.roundId.slice(0,4)}]</span>

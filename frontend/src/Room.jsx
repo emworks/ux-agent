@@ -68,21 +68,21 @@ export default function Room() {
         <strong className="text-gray-700">Participants:</strong>{" "}
         {room.participants?.length > 0 ? (
           <ul className="flex gap-2 text-nowrap">
-            {room.participants.map((p) => (
+            {room.participants.map(({ id: pid, name }) => (
               <li
-                key={p}
+                key={pid}
                 className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
               >
-                {p}
-                {user.id === room.ownerId && p !== user.id && (
+                {name}
+                {user.id === room.ownerId && pid !== user.id && (
                   <button
                     onClick={async () => {
-                      if (!window.confirm(`Remove ${p} from the room?`)) return;
+                      if (!window.confirm(`Remove ${name} from the room?`)) return;
                       try {
-                        await leaveRoom(id, p);
+                        await leaveRoom(id, pid);
                         setRoom((prev) => ({
                           ...prev,
-                          participants: prev.participants.filter((x) => x !== p),
+                          participants: prev.participants.filter((x) => x !== pid),
                         }));
                       } catch (err) {
                         console.error(err);

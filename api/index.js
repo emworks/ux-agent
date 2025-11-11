@@ -85,7 +85,9 @@ app.get("/api/rooms/:id", (req, res) => {
     const room = db.rooms.find(r => r.id === id);
     if (!room) return res.status(404).json({ error: "Room not found" });
 
-    res.json(room);
+    const enrichedRoom = enrichRoomWithUserNames(room);
+
+    res.json(enrichedRoom);
 });
 
 app.get("/api/rooms/:id/messages", (req, res) => {
@@ -93,7 +95,9 @@ app.get("/api/rooms/:id/messages", (req, res) => {
     const db = readDB();
     const messages = (db.messages || []).filter(m => m.roomId === id);
 
-    res.json(messages);
+    const enriched = enrichMessagesWithUserNames(messages);
+
+    res.json(enriched);
 });
 
 app.put("/api/rooms/:id/join", (req, res) => {
@@ -112,7 +116,10 @@ app.put("/api/rooms/:id/join", (req, res) => {
     writeDB(db);
 
     broadcastRoomUpdate(id);
-    res.json(room);
+
+    const enrichedRoom = enrichRoomWithUserNames(room);
+
+    res.json(enrichedRoom);
 });
 
 app.put("/api/rooms/:id/leave", (req, res) => {
@@ -153,9 +160,6 @@ app.delete("/api/rooms/:id", (req, res) => {
 app.head("/api/status", (req, res) => {
     res.status(200).end();
 });
-
-// ROOM
-
 
 const PORT = process.env.PORT || 3000;
 // app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));
@@ -376,7 +380,10 @@ wss.on("connection", (ws, req) => {
                 // Шлем всем клиентам в комнате
                 const sockets = roomSockets.get(roomId);
                 if (sockets) {
-                    const msgPayload = JSON.stringify({ type: "chat_message", message: newMsg });
+                    const usersMap = Object.fromEntries(db.users.map(u => [u.id, u]));
+                    const fullMessage = { ...newMsg, userName: usersMap[newMsg.userId].name || "Unknown" };
+
+                    const msgPayload = JSON.stringify({ type: "chat_message", message: fullMessage });
                     for (const s of sockets) {
                         if (s.readyState === 1) s.send(msgPayload);
                     }
@@ -410,13 +417,40 @@ function broadcastRoomUpdate(roomId) {
     const room = db.rooms.find(r => r.id === roomId);
     if (!room) return;
 
-    const message = JSON.stringify({ type: "room_update", room });
+    const message = JSON.stringify({ type: "room_update", room: enrichRoomWithUserNames(room) });
     const sockets = roomSockets.get(roomId);
     if (!sockets) return;
 
     for (const ws of sockets) {
         if (ws.readyState === 1) ws.send(message);
     }
+}
+
+function enrichRoomWithUserNames(room) {
+    const db = readDB();
+    const usersMap = Object.fromEntries(db.users.map(u => [u.id, u]));
+
+    const enrichedRoom = {
+        ...room,
+        participants: room.participants
+            .map(pid => usersMap[pid])
+            .filter(Boolean),
+        owner: usersMap[room.ownerId] || { id: room.ownerId, name: "Unknown" }
+    };
+
+    return enrichedRoom;
+}
+
+function enrichMessagesWithUserNames(messages) {
+    const db = readDB();
+    const usersMap = Object.fromEntries(db.users.map(u => [u.id, u]));
+
+    const enriched = messages.map(m => ({
+        ...m,
+        userName: usersMap[m.userId].name || "Unknown"
+    }));
+
+    return enriched;
 }
 
 // Запускаем HTTP + WS сервер

@@ -318,7 +318,7 @@ function TaskCard({ task }) {
 function ParticipantsView({ participants, round, user, isFacilitator }) {
   const [viewMode, setViewMode] = useState("cards");
 
-  const getInitials = (id) => id.slice(0, 2).toUpperCase();
+  const getInitials = (name) => name.slice(0, 2).toUpperCase();
 
   // вспомогательная функция для цвета ячеек
   const getLoadColor = (value) => {
@@ -350,55 +350,55 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
       {viewMode === "cards" ? (
         // === КАРТОЧКИ ===
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {participants.map((id) => (
+          {participants.map(({ id: pid, name }) => (
             <div
-              key={id}
+              key={pid}
               className="flex flex-col items-center bg-gray-50 p-4 rounded-2xl shadow hover:shadow-md transition"
             >
               <div className="w-12 h-12 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(id)}
+                {getInitials(name)}
               </div>
-              <strong className="mb-1">{id}</strong>
+              <strong className="mb-1">{name}</strong>
 
               {isFacilitator ? (
                 <>
-                  <div className={`text-sm ${getLoadColor(round?.cognitiveLoad?.[id])}`}>
-                    Load: {round?.cognitiveLoad?.[id] ?? "-"}
+                  <div className={`text-sm ${getLoadColor(round?.cognitiveLoad?.[pid])}`}>
+                    Load: {round?.cognitiveLoad?.[pid] ?? "-"}
                   </div>
-                  <div className="text-sm">Vote 1: {round?.votes?.[id] ?? "-"}</div>
-                  <div className="text-sm">Vote 2: {round?.votes2?.[id] ?? "-"}</div>
+                  <div className="text-sm">Vote 1: {round?.votes?.[pid] ?? "-"}</div>
+                  <div className="text-sm">Vote 2: {round?.votes2?.[pid] ?? "-"}</div>
                   <div className="text-sm">
                     Recommendation:{" "}
-                    {round?.recommendationVotes?.[id] !== undefined
-                      ? round.recommendationVotes[id]
+                    {round?.recommendationVotes?.[pid] !== undefined
+                      ? round.recommendationVotes[pid]
                         ? "👍"
                         : "👎"
                       : "-"}
                   </div>
-                  <div className="text-sm">Vote 3: {round?.votes3?.[id] ?? "-"}</div>
-                  <div className={`text-sm ${getTeamColor(round?.teamEffectiveness?.[id])}`}>
-                    Team: {round?.teamEffectiveness?.[id] ?? "-"}
+                  <div className="text-sm">Vote 3: {round?.votes3?.[pid] ?? "-"}</div>
+                  <div className={`text-sm ${getTeamColor(round?.teamEffectiveness?.[pid])}`}>
+                    Team: {round?.teamEffectiveness?.[pid] ?? "-"}
                   </div>
                 </>
               ) : (
-                id === user.id && (
+                pid === user.id && (
                   <>
-                    {round?.cognitiveLoad?.[id] !== undefined && (
-                      <div className={`text-sm ${getLoadColor(round.cognitiveLoad[id])}`}>
-                        Load: {round.cognitiveLoad[id]}
+                    {round?.cognitiveLoad?.[pid] !== undefined && (
+                      <div className={`text-sm ${getLoadColor(round.cognitiveLoad[pid])}`}>
+                        Load: {round.cognitiveLoad[pid]}
                       </div>
                     )}
-                    {round?.votes?.[id] !== undefined && <div className="text-sm">Vote 1: {round.votes[id]}</div>}
-                    {round?.votes2?.[id] !== undefined && <div className="text-sm">Vote 2: {round.votes2[id]}</div>}
-                    {round?.recommendationVotes?.[id] !== undefined && (
+                    {round?.votes?.[pid] !== undefined && <div className="text-sm">Vote 1: {round.votes[pid]}</div>}
+                    {round?.votes2?.[pid] !== undefined && <div className="text-sm">Vote 2: {round.votes2[pid]}</div>}
+                    {round?.recommendationVotes?.[pid] !== undefined && (
                       <div className="text-sm">
-                        Recommendation: {round.recommendationVotes[id] ? "👍" : "👎"}
+                        Recommendation: {round.recommendationVotes[pid] ? "👍" : "👎"}
                       </div>
                     )}
-                    {round?.votes3?.[id] !== undefined && <div className="text-sm">Vote 3: {round.votes3[id]}</div>}
-                    {round?.teamEffectiveness?.[id] !== undefined && (
-                      <div className={`text-sm ${getTeamColor(round.teamEffectiveness[id])}`}>
-                        Team: {round.teamEffectiveness[id]}
+                    {round?.votes3?.[pid] !== undefined && <div className="text-sm">Vote 3: {round.votes3[pid]}</div>}
+                    {round?.teamEffectiveness?.[pid] !== undefined && (
+                      <div className={`text-sm ${getTeamColor(round.teamEffectiveness[pid])}`}>
+                        Team: {round.teamEffectiveness[pid]}
                       </div>
                     )}
                   </>
@@ -423,24 +423,24 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
               </tr>
             </thead>
             <tbody>
-              {participants.map((id, i) => (
-                <tr key={id} className={i % 2 ? "bg-white" : "bg-gray-50"}>
-                  <td className="px-4 py-2 font-medium">{id}</td>
-                  <td className={`px-4 py-2 text-center ${getLoadColor(round?.cognitiveLoad?.[id])}`}>
-                    {round?.cognitiveLoad?.[id] ?? "-"}
+              {participants.map(({ id: pid, name }, i) => (
+                <tr key={pid} className={i % 2 ? "bg-white" : "bg-gray-50"}>
+                  <td className="px-4 py-2 font-medium">{name}</td>
+                  <td className={`px-4 py-2 text-center ${getLoadColor(round?.cognitiveLoad?.[pid])}`}>
+                    {round?.cognitiveLoad?.[pid] ?? "-"}
                   </td>
-                  <td className="px-4 py-2 text-center">{round?.votes?.[id] ?? "-"}</td>
-                  <td className="px-4 py-2 text-center">{round?.votes2?.[id] ?? "-"}</td>
+                  <td className="px-4 py-2 text-center">{round?.votes?.[pid] ?? "-"}</td>
+                  <td className="px-4 py-2 text-center">{round?.votes2?.[pid] ?? "-"}</td>
                   <td className="px-4 py-2 text-center">
-                    {round?.recommendationVotes?.[id] !== undefined
-                      ? round.recommendationVotes[id]
+                    {round?.recommendationVotes?.[pid] !== undefined
+                      ? round.recommendationVotes[pid]
                         ? "👍"
                         : "👎"
                       : "-"}
                   </td>
-                  <td className="px-4 py-2 text-center">{round?.votes3?.[id] ?? "-"}</td>
-                  <td className={`px-4 py-2 text-center ${getTeamColor(round?.teamEffectiveness?.[id])}`}>
-                    {round?.teamEffectiveness?.[id] ?? "-"}
+                  <td className="px-4 py-2 text-center">{round?.votes3?.[pid] ?? "-"}</td>
+                  <td className={`px-4 py-2 text-center ${getTeamColor(round?.teamEffectiveness?.[pid])}`}>
+                    {round?.teamEffectiveness?.[pid] ?? "-"}
                   </td>
                 </tr>
               ))}
@@ -453,7 +453,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
 }
 
 function TeamVotesView({ participants, round, user }) {
-  const getInitials = (id) => id.slice(0, 2).toUpperCase();
+  const getInitials = (name) => name.slice(0, 2).toUpperCase();
 
   const getVoteColor = (vote) => {
     if (vote == null) return "bg-gray-300 text-gray-600";
@@ -467,23 +467,23 @@ function TeamVotesView({ participants, round, user }) {
       <h4 className="text-lg font-semibold text-center mb-4">Team Votes</h4>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {participants.map((id) => {
-          const vote1 = round?.votes?.[id];
-          const vote2 = round?.votes2?.[id];
-          const vote3 = round?.votes3?.[id];
+        {participants.map(({ id: pid, name }) => {
+          const vote1 = round?.votes?.[pid];
+          const vote2 = round?.votes2?.[pid];
+          const vote3 = round?.votes3?.[pid];
 
           return (
             <div
-              key={id}
-              className={`flex flex-col items-center p-4 rounded-2xl shadow bg-white border transition ${id === user.id ? "ring-2 ring-indigo-400" : "hover:shadow-md"
+              key={pid}
+              className={`flex flex-col items-center p-4 rounded-2xl shadow bg-white border transition ${pid === user.id ? "ring-2 ring-indigo-400" : "hover:shadow-md"
                 }`}
             >
               {/* Avatar */}
               <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-lg mb-2">
-                {getInitials(id)}
+                {getInitials(name)}
               </div>
 
-              <div className="text-sm font-medium mb-1">{id}</div>
+              <div className="text-sm font-medium mb-1">{name}</div>
 
               {/* Votes */}
               <div className="flex flex-col gap-1 w-full">
