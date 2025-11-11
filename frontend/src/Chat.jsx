@@ -1,16 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getRoomMessages } from './api';
-
-// Цвета для пользователей
-const colors = ["#60A5FA", "#F87171", "#34D399", "#FBBF24", "#A78BFA", "#F472B6"];
-function getUserColor(userId) {
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  return colors[index];
-}
+import getUserColor from "./getUserColor";
 
 export default function Chat({ user, room, ws }) {
   const [messages, setMessages] = useState([]);

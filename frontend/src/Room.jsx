@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { joinRoom, leaveRoom } from "./api";
 import PlanningPokerRound from "./PlanningPokerRound";
 import Chat from './Chat';
+import getUserColor from "./getUserColor";
 
 export default function Room() {
   const { id } = useParams();
@@ -49,6 +50,8 @@ export default function Room() {
 
   if (!room) return <div className="text-center py-10 text-gray-500">Loading room...</div>;
 
+  const getInitials = (name) => name.slice(0, 2).toUpperCase();
+
   return (
     <div className="w-full max-w-screen-xl mx-auto p-6 h-screen">
       <div className="flex justify-between items-center mb-6 h-[calc(40px)]">
@@ -64,16 +67,23 @@ export default function Room() {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-6 p-4 bg-gray-50 rounded shadow h-[calc(60px)] overflow-y-auto">
-        <strong className="text-gray-700">Participants:</strong>{" "}
+      <div className="flex items-center gap-2 mb-6 p-4 bg-gray-50 rounded shadow overflow-x-auto">
+        <strong className="text-gray-700 whitespace-nowrap">Participants:</strong>
         {room.participants?.length > 0 ? (
-          <ul className="flex gap-2 text-nowrap">
+          <ul className="flex gap-3">
             {room.participants.map(({ id: pid, name }) => (
               <li
                 key={pid}
-                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                title={name}
+                style={{ backgroundColor: getUserColor(name) }}
+                className="relative group w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm select-none hover:shadow transition"
               >
-                {name}
+                {/* avatar */}
+                <span>
+                  {getInitials(name)}
+                </span>
+
+                {/* remove button (only for facilitator, and not self) */}
                 {user.id === room.ownerId && pid !== user.id && (
                   <button
                     onClick={async () => {
@@ -82,14 +92,15 @@ export default function Room() {
                         await leaveRoom(id, pid);
                         setRoom((prev) => ({
                           ...prev,
-                          participants: prev.participants.filter((x) => x !== pid),
+                          participants: prev.participants.filter((x) => x.id !== pid),
                         }));
                       } catch (err) {
                         console.error(err);
                         alert("Could not remove participant. Try again.");
                       }
                     }}
-                    className="bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600 transition text-xs"
+                    className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 bg-red-500 text-white w-4 h-4 rounded-full text-xs flex items-center justify-center hover:bg-red-600 transition"
+                    title="Remove participant"
                   >
                     ×
                   </button>

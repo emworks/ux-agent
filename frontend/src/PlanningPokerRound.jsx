@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import getUserColor from "./getUserColor";
 
 function getRoundStatusLabel(status) {
   switch (status) {
@@ -355,7 +356,10 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
               key={pid}
               className="flex flex-col items-center bg-gray-50 p-4 rounded-2xl shadow hover:shadow-md transition"
             >
-              <div className="w-12 h-12 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-lg mb-2">
+              <div
+                style={{ backgroundColor: getUserColor(name) }}
+                className="w-12 h-12 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-lg mb-2"
+              >
                 {getInitials(name)}
               </div>
               <strong className="mb-1">{name}</strong>
@@ -425,7 +429,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
             <tbody>
               {participants.map(({ id: pid, name }, i) => (
                 <tr key={pid} className={i % 2 ? "bg-white" : "bg-gray-50"}>
-                  <td className="px-4 py-2 font-medium">{name}</td>
+                  <td style={{ color: getUserColor(name) }} className="px-4 py-2 font-medium">{name}</td>
                   <td className={`px-4 py-2 text-center ${getLoadColor(round?.cognitiveLoad?.[pid])}`}>
                     {round?.cognitiveLoad?.[pid] ?? "-"}
                   </td>
