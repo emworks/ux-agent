@@ -63,7 +63,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   const progressTeam = participants.length ? (Object.keys(round?.teamEffectiveness || {}).length / participants.length) * 100 : 0;
 
   return (
-    <div className="bg-white shadow-xl rounded-xl p-6 mt-6 border border-gray-200 max-w-4xl mx-auto">
+    <div className="bg-white shadow-xl rounded-xl p-6 border border-gray-200 max-w-4xl mx-auto">
       <h3 className="text-3xl font-bold mb-4 text-center">Planning Poker Round</h3>
       <p className="text-gray-700 mb-6 text-center">
         Status: <span className="font-semibold">{getRoundStatusLabel(status)}</span>

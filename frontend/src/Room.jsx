@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { joinRoom, leaveRoom } from "./api";
 import PlanningPokerRound from "./PlanningPokerRound";
+import Chat from './Chat';
 
 export default function Room() {
   const { id } = useParams();
@@ -19,19 +20,15 @@ export default function Room() {
     let socket;
 
     async function init() {
-      // Присоединяемся через API
       const joined = await joinRoom(id, user.id);
       setRoom(joined);
 
-      // Подключаемся к WebSocket
       socket = new WebSocket(`ws://localhost:3000/rooms/${id}`);
       setWs(socket);
 
       socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        if (message.type === "room_update") {
-          setRoom(message.room);
-        }
+        if (message.type === "room_update") setRoom(message.room);
       };
 
       socket.onclose = () => console.log("🔌 Disconnected from room");
@@ -39,15 +36,12 @@ export default function Room() {
 
     init();
 
-    return () => {
-      if (socket) socket.close();
-    };
+    return () => socket?.close();
   }, [id, user, navigate]);
 
   async function handleLeave() {
     if (!room || !user) return;
-    const confirmLeave = window.confirm("Leave the room?");
-    if (!confirmLeave) return;
+    if (!window.confirm("Leave the room?")) return;
 
     await leaveRoom(id, user.id);
     navigate("/");
@@ -56,8 +50,8 @@ export default function Room() {
   if (!room) return <div className="text-center py-10 text-gray-500">Loading room...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="w-full max-w-screen-xl mx-auto p-6 h-screen">
+      <div className="flex justify-between items-center mb-6 h-[calc(40px)]">
         <h2 className="text-2xl font-bold text-gray-800">Room: {room.name}</h2>
         <button
           onClick={handleLeave}
@@ -67,33 +61,28 @@ export default function Room() {
         </button>
       </div>
 
-      <div className="mb-6 p-4 bg-gray-50 rounded shadow">
+      <div className="flex items-center gap-2 mb-6 p-4 bg-gray-50 rounded shadow h-[calc(60px)] overflow-y-auto">
         <strong className="text-gray-700">Participants:</strong>{" "}
         {room.participants?.length > 0 ? (
-          <ul className="mt-2 flex flex-wrap gap-2">
+          <ul className="flex gap-2 text-nowrap">
             {room.participants.map((p) => (
               <li
                 key={p}
                 className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
               >
                 {p}
-
-                {/* Кнопка удаления только для фасилитатора и не на себе */}
                 {user.id === room.ownerId && p !== user.id && (
                   <button
                     onClick={async () => {
-                      const confirmRemove = window.confirm(`Remove ${p} from the room?`);
-                      if (!confirmRemove) return;
-
+                      if (!window.confirm(`Remove ${p} from the room?`)) return;
                       try {
                         await leaveRoom(id, p);
-                        // После успешного удаления можно обновить локальный state:
                         setRoom((prev) => ({
                           ...prev,
                           participants: prev.participants.filter((x) => x !== p),
                         }));
                       } catch (err) {
-                        console.error("Failed to remove participant:", err);
+                        console.error(err);
                         alert("Could not remove participant. Try again.");
                       }
                     }}
@@ -110,12 +99,25 @@ export default function Room() {
         )}
       </div>
 
-      <PlanningPokerRound
-        user={user}
-        isFacilitator={user.id === room.ownerId}
-        room={room}
-        ws={ws}
-      />
+      {/* --- Основной контент --- */}
+      <div className="flex gap-6">
+
+        
+        {/* PlanningPokerRound растягивается и прокручивается */}
+        <div className="flex-1 overflow-y-auto min-w-[600px]">
+          <PlanningPokerRound
+            user={user}
+            isFacilitator={user.id === room.ownerId}
+            room={room}
+            ws={ws}
+          />
+        </div>
+
+        {/* Chat фиксированной ширины, растягивается по высоте */}
+        <div className="w-80 flex-shrink-0 h-full sticky top-5">
+          <Chat user={user} room={room} ws={ws} />
+        </div>
+      </div>
 
       <div className="mt-6">
         <Link to="/" className="text-blue-500 hover:underline">

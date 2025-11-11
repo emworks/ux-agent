@@ -88,6 +88,14 @@ app.get("/api/rooms/:id", (req, res) => {
     res.json(room);
 });
 
+app.get("/api/rooms/:id/messages", (req, res) => {
+    const { id } = req.params;
+    const db = readDB();
+    const messages = (db.messages || []).filter(m => m.roomId === id);
+
+    res.json(messages);
+});
+
 app.put("/api/rooms/:id/join", (req, res) => {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ error: "User is required" });
@@ -330,6 +338,35 @@ wss.on("connection", (ws, req) => {
                 currentRound.completedAt = new Date().toISOString();
                 writeDB(db);
                 broadcastRoundUpdate(roomId, currentRound);
+                break;
+
+            case "send_message":
+                const { text, roundId } = payload;
+                if (!text || !payload.userId) return;
+
+                const newMsg = {
+                    id: uuidv4(),
+                    roomId,
+                    roundId: roundId || null,
+                    userId: payload.userId,
+                    text,
+                    createdAt: new Date().toISOString()
+                };
+
+                // Сохраняем в DB
+                const db = readDB();
+                db.messages = db.messages || [];
+                db.messages.push(newMsg);
+                writeDB(db);
+
+                // Шлем всем клиентам в комнате
+                const sockets = roomSockets.get(roomId);
+                if (sockets) {
+                    const msgPayload = JSON.stringify({ type: "chat_message", message: newMsg });
+                    for (const s of sockets) {
+                        if (s.readyState === 1) s.send(msgPayload);
+                    }
+                }
                 break;
         }
     });
