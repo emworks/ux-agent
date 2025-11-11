@@ -95,7 +95,6 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         </div>
       )}
 
-
       {/* --- Cognitive Load --- */}
       {status === "cognitive_load" && (
         <>

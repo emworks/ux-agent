@@ -52,7 +52,10 @@ export default function Room() {
   return (
     <div className="w-full max-w-screen-xl mx-auto p-6 h-screen">
       <div className="flex justify-between items-center mb-6 h-[calc(40px)]">
-        <h2 className="text-2xl font-bold text-gray-800">Room: {room.name}</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          <Link to="/">←</Link>{' '}
+          Room: {room.name}
+        </h2>
         <button
           onClick={handleLeave}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
@@ -101,8 +104,6 @@ export default function Room() {
 
       {/* --- Основной контент --- */}
       <div className="flex gap-6">
-
-        
         {/* PlanningPokerRound растягивается и прокручивается */}
         <div className="flex-1 overflow-y-auto min-w-[600px]">
           <PlanningPokerRound
@@ -117,12 +118,6 @@ export default function Room() {
         <div className="w-80 flex-shrink-0 h-full sticky top-5">
           <Chat user={user} room={room} ws={ws} />
         </div>
-      </div>
-
-      <div className="mt-6">
-        <Link to="/" className="text-blue-500 hover:underline">
-          ← Back to lobby
-        </Link>
       </div>
     </div>
   );
