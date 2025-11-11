@@ -70,7 +70,7 @@ function Lobby() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-        <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
+        <div className="bg-white p-6 rounded-xl border border-gray-200 w-full max-w-sm">
           <h2 className="text-2xl font-bold mb-4 text-center">Регистрация</h2>
           <input
             value={name}
@@ -93,14 +93,14 @@ function Lobby() {
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-4">Привет, {user.name}</h2>
 
-      <div className="mb-6 p-4 bg-gray-50 rounded shadow">
+      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
         <h3 className="text-lg font-semibold mb-3">Новая комната</h3>
         <div className="flex flex-col sm:flex-row gap-3 items-center">
           <input
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
             placeholder="Название комнаты"
-            className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto"
+            className="flex-1 bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto"
           />
 
           <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ function Lobby() {
             {rooms.map((r) => (
               <li
                 key={r.id}
-                className="bg-white p-4 rounded shadow flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+                className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-2"
               >
                 <div>
                   <div className="font-semibold text-gray-800">{r.name}</div>

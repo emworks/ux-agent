@@ -49,7 +49,7 @@ export default function Chat({ user, room, ws }) {
   };
 
   return (
-    <div className="w-80 flex-shrink-0 flex flex-col bg-gray-50 rounded shadow p-3 h-[calc(100vh-190px)]">
+    <div className="w-80 flex-shrink-0 flex flex-col h-screen fixed bottom-3 pt-[calc(70px)]">
       <div className="flex-1 overflow-y-auto mb-2">
         {messages.map((m) => (
           <div key={m.id} className={`mb-2 ${m.userId === user.id ? "text-right" : "text-left"}`}>
@@ -65,7 +65,7 @@ export default function Chat({ user, room, ws }) {
         ))}
         <div ref={scrollRef} />
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 h-[calc(40px)]">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -75,7 +75,7 @@ export default function Chat({ user, room, ws }) {
         />
         <button
           onClick={sendMessage}
-          className="bg-indigo-600 text-white px-3 rounded hover:bg-indigo-700 transition"
+          className="bg-indigo-600 text-white px-3 rounded hover:bg-indigo-700 transition h-[calc(40px)] w-[calc(40px)]"
         >
           ↑
         </button>

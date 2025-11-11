@@ -53,68 +53,62 @@ export default function Room() {
   const getInitials = (name) => name.slice(0, 2).toUpperCase();
 
   return (
-    <div className="w-full max-w-screen-xl mx-auto p-6 h-screen">
-      <div className="flex justify-between items-center mb-6 h-[calc(40px)]">
+    <div className="w-full max-w-screen-xl mx-auto h-screen">
+      <div className="flex justify-between items-center mb-3 h-[calc(60px)] py-3 px-6 sticky top-0 bg-white z-1">
         <h2 className="text-2xl font-bold text-gray-800">
           <Link to="/">←</Link>{' '}
           {room.name}
         </h2>
-        <button
+        {/* <button
           onClick={handleLeave}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
         >
           Покинуть комнату
-        </button>
-      </div>
-
-      <div className="flex items-center gap-2 mb-6 p-4 bg-gray-50 rounded shadow overflow-x-auto">
-        <strong className="text-gray-700 whitespace-nowrap">Участники:</strong>
-        {room.participants?.length > 0 ? (
-          <ul className="flex gap-3">
-            {room.participants.map(({ id: pid, name }) => (
-              <li
-                key={pid}
-                title={name}
-                style={{ backgroundColor: getUserColor(name) }}
-                className="relative group w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm select-none hover:shadow transition"
-              >
-                {/* avatar */}
-                <span>
-                  {getInitials(name)}
-                </span>
-
-                {/* remove button (only for facilitator, and not self) */}
-                {user.id === room.ownerId && pid !== user.id && (
-                  <button
-                    onClick={async () => {
-                      if (!window.confirm(`Remove ${name} from the room?`)) return;
-                      try {
-                        await leaveRoom(id, pid);
-                        setRoom((prev) => ({
-                          ...prev,
-                          participants: prev.participants.filter((x) => x.id !== pid),
-                        }));
-                      } catch (err) {
-                        console.error(err);
-                        alert("Could not remove participant. Try again.");
-                      }
-                    }}
-                    className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 bg-red-500 text-white w-4 h-4 rounded-full text-xs flex items-center justify-center hover:bg-red-600 transition"
-                    title="Remove participant"
+        </button> */}
+        {room.participants?.length > 0 && (
+              <ul className="flex gap-2">
+                {room.participants.map(({ id: pid, name }) => (
+                  <li
+                    key={pid}
+                    title={name}
+                    style={{ backgroundColor: getUserColor(name) }}
+                    className="relative group w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold text-sm select-none hover:shadow transition"
                   >
-                    ×
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <span className="text-gray-400 ml-2">Пока здесь никого</span>
-        )}
+                    {/* avatar */}
+                    <span>
+                      {getInitials(name)}
+                    </span>
+
+                    {/* remove button (only for facilitator, and not self) */}
+                    {user.id === room.ownerId && pid !== user.id && (
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`Remove ${name} from the room?`)) return;
+                          try {
+                            await leaveRoom(id, pid);
+                            setRoom((prev) => ({
+                              ...prev,
+                              participants: prev.participants.filter((x) => x.id !== pid),
+                            }));
+                          } catch (err) {
+                            console.error(err);
+                            alert("Could not remove participant. Try again.");
+                          }
+                        }}
+                        className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 bg-red-500 text-white w-4 h-4 rounded-full text-xs flex items-center justify-center hover:bg-red-600 transition"
+                        title="Remove participant"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
       </div>
 
       {/* --- Основной контент --- */}
-      <div className="flex gap-6">
+      <div className="flex gap-6 p-6">
         {/* PlanningPokerRound растягивается и прокручивается */}
         <div className="flex-1 overflow-y-auto min-w-[600px]">
           <PlanningPokerRound
@@ -126,7 +120,7 @@ export default function Room() {
         </div>
 
         {/* Chat фиксированной ширины, растягивается по высоте */}
-        <div className="w-80 flex-shrink-0 h-full sticky top-5">
+        <div className="w-80 flex-shrink-0 h-full">
           <Chat user={user} room={room} ws={ws} />
         </div>
       </div>

@@ -56,24 +56,25 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
   }, [round?.recommendationVotes]);
 
   return (
-    <div className="bg-white shadow-xl rounded-xl p-6 border border-gray-200 max-w-4xl mx-auto">
+    <div className="bg-white max-w-4xl mx-auto">
       <p className="text-gray-700 mb-6 text-center">
         <span className="font-semibold">{getRoundStatusLabel(status)}</span>
       </p>
 
       {/* --- Фасилитатор стартует раунд --- */}
       {isFacilitator && (status === "ждет начала" || status === "completed") && (
-        <div className="flex flex-col items-center gap-3 mb-6">
+        <div className="flex flex items-end gap-2 mb-6 px-1">
           <AutoResizingTextarea
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && startRound()}
             placeholder="Описание задачи для участников"
           />
           <button
             onClick={startRound}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition shadow-md"
+            className="bg-indigo-600 text-white px-3 rounded hover:bg-indigo-700 transition h-[calc(40px)] w-[calc(40px)]"
           >
-            Начать раунд
+            ↓
           </button>
         </div>
       )}
@@ -135,7 +136,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <div className="mb-6">
           <TaskCard task={round?.task} />
           {(isFacilitator || user.id === round?.targetUserId) && round?.recommendation && (
-            <RecommendationCard recommendation={round.recommendation}/>
+            <RecommendationCard recommendation={round.recommendation} />
           )}
 
           <VotePhase
@@ -153,7 +154,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
             <>
               <h4 className="text-lg font-semibold mb-2">Рекомендация была полезна?</h4>
               {!isFacilitator && (
-                <div className="flex gap-4 justify-center mb-4">
+                <div className="flex gap-4 justify-center mb-4 p-10">
                   <button onClick={() => {
                     setSelectedRecommendation(true);
                     handleRecommendationVote(true);
@@ -211,7 +212,8 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {/* --- Team Effectiveness --- */}
       {status === "teamEffectiveness" && (
         <VotePhase
-          title="Насколько эффективно команда справилась с задачей? (1 – совсем неэффективно, 7 – очень эффективно)"
+          title="Насколько эффективно команда справилась с задачей?"
+          subtitle="(1 – совсем неэффективно, 7 – очень эффективно)"
           participants={participants}
           votes={round?.teamEffectiveness}
           progress={progressTeam}
@@ -233,14 +235,14 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 
       {/* --- Фасилитаторские кнопки --- */}
       {isFacilitator && status !== "ждет начала" && status !== "completed" && (
-        <div className="flex justify-center gap-4 mb-4">
+        <div className="flex justify-center gap-4">
           <button onClick={nextPhase} className="bg-purple-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 shadow-md transition">Продолжить</button>
           <button onClick={endRound} className="bg-red-500 text-white px-5 py-2 rounded-full hover:bg-red-600 shadow-md transition">Завершить раунд</button>
         </div>
       )}
 
-      {status === "completed" && (
-        <div className="text-center py-3 bg-gray-100 rounded-xl font-semibold shadow-inner">Раунд завершён</div>
+      {status === "completed" && !isFacilitator && (
+        <div className="text-center py-3 bg-gray-100 rounded-xl font-semibold">Раунд завершён</div>
       )}
     </div>
   );
@@ -249,6 +251,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 // ---------- Компонент Vote / Team ----------
 function VotePhase({
   title,
+  subtitle,
   participants,
   handleVote,
   votes,
@@ -276,9 +279,13 @@ function VotePhase({
     <div className="mb-6">
       {!showCognitiveLoad && (
         <>
-          <h4 className="text-lg font-semibold mb-2">{title}</h4>
+          <h4 className={`text-lg font-semibold ${subtitle ? "" : "mb-2"}`}>{title}</h4>
+          {subtitle && (
+            <h5 className="text-sm text-gray-500 font-semibold mb-3">
+              {subtitle}
+            </h5>)}
           {!isFacilitator && (
-            <div className="flex flex-wrap gap-3 mb-4 justify-center">
+            <div className="flex flex-wrap gap-3 mb-4 p-10 justify-center">
               {options.map((val) => (
                 <button key={val} onClick={() => {
                   setSelectedVote(val);
@@ -295,16 +302,19 @@ function VotePhase({
       )}
       {showCognitiveLoad && (
         <div>
-          <h4 className="text-lg font-semibold mb-2">
-            Насколько сложно было оценить задачу? (1 – совсем не сложно, 7 – крайне сложно)
+          <h4 className="text-lg font-semibold">
+            Насколько сложно было оценить задачу?
           </h4>
+          <h5 className="text-sm text-gray-500 font-semibold mb-3">
+            (1 – совсем не сложно, 7 – крайне сложно)
+          </h5>
           {!isFacilitator && (
-            <div className="flex flex-wrap gap-2 mb-2 justify-center">
+            <div className="flex flex-wrap gap-2 mb-4 p-10 justify-center">
               {[1, 2, 3, 4, 5, 6, 7].map(cl => (
                 <button key={cl} onClick={() => {
                   setSelectedLoad(cl);
                   handleCognitiveLoad(cl);
-                }} className={`px-3 py-1 rounded-full transition shadow-sm
+                }} className={`px-4 py-2 rounded-full transition shadow-sm
     ${selectedLoad === cl
                     ? "bg-yellow-500 text-black ring-2 ring-yellow-400"
                     : "bg-yellow-400 hover:bg-yellow-500 text-black"}`}>{cl}</button>
@@ -333,7 +343,7 @@ function ProgressBar({ progress, color, label }) {
 function TaskCard({ task }) {
   if (!task) return null;
   return (
-    <div className="bg-gray-100 text-gray-800 p-4 rounded-lg mb-4 shadow-sm">
+    <div className="bg-gray-100 text-gray-800 p-4 rounded-xl mb-4">
       <h3 className="text-sm uppercase text-gray-500 mb-2">Задача</h3>
       <div className="whitespace-pre-wrap font-medium">{task}</div>
     </div>
@@ -343,7 +353,7 @@ function TaskCard({ task }) {
 function RecommendationCard({ recommendation }) {
   if (!recommendation) return null;
   return (
-    <div className="bg-yellow-100 p-4 rounded-lg mb-4 shadow-sm">
+    <div className="bg-yellow-100 p-4 rounded-xl mb-4">
       <h3 className="text-sm uppercase text-gray-500 mb-2">Рекомендация от AI</h3>
       <div className="whitespace-pre-wrap font-medium">{recommendation}</div>
     </div>
@@ -373,7 +383,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-3">
-        <h4 className="text-lg font-semibold text-center flex-1">Участники</h4>
+        <span className="font-semibold text-gray-700 flex-1">Результаты</span>
         <button
           onClick={() => setViewMode(viewMode === "cards" ? "table" : "cards")}
           className="px-3 py-1 text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl transition"
@@ -388,7 +398,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
           {participants.map(({ id: pid, name }) => (
             <div
               key={pid}
-              className="flex flex-col items-center bg-gray-50 p-4 rounded-2xl shadow hover:shadow-md transition"
+              className="flex flex-col items-center bg-gray-50 p-4 rounded-2xl"
             >
               <div
                 style={{ backgroundColor: getUserColor(name) }}
@@ -396,7 +406,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
               >
                 {getInitials(name)}
               </div>
-              <strong className="mb-1">{name}</strong>
+              <strong className="mb-2">{name}</strong>
 
               {isFacilitator ? (
                 <>
@@ -448,7 +458,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
       ) : (
         // === ТАБЛИЦА ===
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border border-gray-200 rounded-2xl overflow-hidden">
+          <table className="min-w-full text-sm rounded-2xl overflow-hidden">
             <thead className="bg-gray-100 text-gray-600">
               <tr>
                 <th className="px-4 py-2 text-left">Участник</th>
@@ -502,7 +512,7 @@ function TeamVotesView({ participants, round, user }) {
 
   return (
     <div className="mb-6">
-      <h4 className="text-lg font-semibold text-center mb-4">Оценки команды</h4>
+      <div className="font-semibold text-gray-700 mb-3">Результаты</div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {participants.map(({ id: pid, name }) => {
@@ -513,15 +523,17 @@ function TeamVotesView({ participants, round, user }) {
           return (
             <div
               key={pid}
-              className={`flex flex-col items-center p-4 rounded-2xl shadow bg-white border transition ${pid === user.id ? "ring-2 ring-indigo-400" : "hover:shadow-md"
+              className={`flex flex-col items-center p-4 rounded-2xl bg-white border transition ${pid === user.id ? "ring-2 ring-indigo-400" : "hover:shadow-md"
                 }`}
             >
               {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-lg mb-2">
+              <div
+                style={{ backgroundColor: getUserColor(name) }}
+                className="w-12 h-12 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-lg mb-2"
+              >
                 {getInitials(name)}
               </div>
-
-              <div className="text-sm font-medium mb-1">{name}</div>
+              <strong className="mb-2">{name}</strong>
 
               {/* Votes */}
               <div className="flex flex-col gap-1 w-full">
@@ -549,7 +561,7 @@ function TeamVotesView({ participants, round, user }) {
   );
 }
 
-function AutoResizingTextarea({ value, onChange, placeholder, className }) {
+function AutoResizingTextarea({ value, onChange, onKeyDown, placeholder, className }) {
   const textareaRef = useRef(null);
 
   // Подстраиваем высоту под контент
@@ -571,8 +583,9 @@ function AutoResizingTextarea({ value, onChange, placeholder, className }) {
         onChange(e);
         autoResize();
       }}
+      onKeyDown={onKeyDown}
       placeholder={placeholder}
-      className={`border border-gray-300 rounded-lg px-4 py-2 w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 overflow-hidden transition-all ${className}`}
+      className={`border border-gray-300 rounded px-4 py-2 w-full resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 overflow-hidden transition-all ${className}`}
       rows={1}
     />
   );
