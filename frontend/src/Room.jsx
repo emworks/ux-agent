@@ -63,12 +63,12 @@ export default function Room() {
           onClick={handleLeave}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
         >
-          Leave Room
+          Покинуть комнату
         </button>
       </div>
 
       <div className="flex items-center gap-2 mb-6 p-4 bg-gray-50 rounded shadow overflow-x-auto">
-        <strong className="text-gray-700 whitespace-nowrap">Participants:</strong>
+        <strong className="text-gray-700 whitespace-nowrap">Участники:</strong>
         {room.participants?.length > 0 ? (
           <ul className="flex gap-3">
             {room.participants.map(({ id: pid, name }) => (
@@ -109,7 +109,7 @@ export default function Room() {
             ))}
           </ul>
         ) : (
-          <span className="text-gray-400 ml-2">No one here yet</span>
+          <span className="text-gray-400 ml-2">Пока здесь никого</span>
         )}
       </div>
 

@@ -57,9 +57,8 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
 
   return (
     <div className="bg-white shadow-xl rounded-xl p-6 border border-gray-200 max-w-4xl mx-auto">
-      <h3 className="text-3xl font-bold mb-4 text-center">Planning Poker</h3>
       <p className="text-gray-700 mb-6 text-center">
-        Status: <span className="font-semibold">{getRoundStatusLabel(status)}</span>
+        <span className="font-semibold">{getRoundStatusLabel(status)}</span>
       </p>
 
       {/* --- Фасилитатор стартует раунд --- */}
@@ -68,13 +67,13 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
           <AutoResizingTextarea
             value={taskInput}
             onChange={(e) => setTaskInput(e.target.value)}
-            placeholder="Task description"
+            placeholder="Описание задачи для участников"
           />
           <button
             onClick={startRound}
             className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition shadow-md"
           >
-            Start Round
+            Начать раунд
           </button>
         </div>
       )}
@@ -84,7 +83,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <>
           <TaskCard task={round?.task} />
           <VotePhase
-            title="Cognitive Load"
+            title="Когнитивная нагрузка"
             participants={participants}
             progress2={progressCl}
             showCognitiveLoad
@@ -101,7 +100,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <>
           <TaskCard task={round?.task} />
           <VotePhase
-            title="Vote 1"
+            title="Сложность задачи"
             participants={participants}
             handleVote={(sp) => handleVote(sp, 1)}
             votes={round?.votes}
@@ -118,7 +117,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
           <TaskCard task={round?.task} />
           {round?.loadingRecommendation && (
             <div className="text-center text-gray-500 py-2 mb-2">
-              ⏳ Generating recommendation...
+              ⏳ AI думает...
             </div>
           )}
           {!isFacilitator && (
@@ -136,15 +135,15 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <div className="mb-6">
           <TaskCard task={round?.task} />
           {(isFacilitator || user.id === round?.targetUserId) && round?.recommendation && (
-            <div className="bg-yellow-100 p-4 rounded mb-4 text-center">
-              Recommendation: <span className="font-medium">{round.recommendation}</span>
+            <div className="bg-yellow-100 p-4 rounded mb-4 text-center whitespace-pre-wrap ">
+              Рекомендация от AI: <span className="font-medium">{round.recommendation}</span>
             </div>
           )}
 
           {/* Голосовать могут только targetUserId */}
           {(isFacilitator || user.id === round?.targetUserId) && (
             <>
-              <h4 className="text-lg font-semibold mb-2">Do you agree with recommendation?</h4>
+              <h4 className="text-lg font-semibold mb-2">Рекомендация полезна?</h4>
               {!isFacilitator && (
                 <div className="flex gap-4 justify-center mb-2">
                   <button onClick={() => {
@@ -170,7 +169,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
           )}
 
           <VotePhase
-            title="Vote 2"
+            title="Сложность задачи"
             participants={participants}
             handleVote={(sp) => handleVote(sp, 2)}
             votes={round?.votes2}
@@ -200,7 +199,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <>
           <TaskCard task={round?.task} />
           <VotePhase
-            title="Final Vote"
+            title="Сложность задачи"
             participants={participants}
             handleVote={(sp) => handleVote(sp, 3)}
             votes={round?.votes3}
@@ -214,7 +213,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {/* --- Team Effectiveness --- */}
       {status === "teamEffectiveness" && (
         <VotePhase
-          title="Team Effectiveness"
+          title="Эффективность команды"
           participants={participants}
           votes={round?.teamEffectiveness}
           progress={progressTeam}
@@ -237,13 +236,13 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
       {/* --- Фасилитаторские кнопки --- */}
       {isFacilitator && status !== "ждет начала" && status !== "completed" && (
         <div className="flex justify-center gap-4 mb-4">
-          <button onClick={nextPhase} className="bg-purple-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 shadow-md transition">Next Phase</button>
-          <button onClick={endRound} className="bg-red-500 text-white px-5 py-2 rounded-full hover:bg-red-600 shadow-md transition">End Round</button>
+          <button onClick={nextPhase} className="bg-purple-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 shadow-md transition">Продолжить</button>
+          <button onClick={endRound} className="bg-red-500 text-white px-5 py-2 rounded-full hover:bg-red-600 shadow-md transition">Завершить раунд</button>
         </div>
       )}
 
       {status === "completed" && (
-        <div className="text-center py-3 bg-gray-100 rounded-xl font-semibold shadow-inner">Round Completed</div>
+        <div className="text-center py-3 bg-gray-100 rounded-xl font-semibold shadow-inner">Раунд завершён</div>
       )}
     </div>
   );
@@ -298,7 +297,7 @@ function VotePhase({
       )}
       {showCognitiveLoad && (
         <div>
-          <h4 className="text-lg font-semibold mb-2">Cognitive Load (1-7)</h4>
+          <h4 className="text-lg font-semibold mb-2">Когнитивная нагрузка (1-7)</h4>
           {!isFacilitator && (
             <div className="flex flex-wrap gap-2 mb-2 justify-center">
               {[1, 2, 3, 4, 5, 6, 7].map(cl => (
@@ -335,7 +334,7 @@ function TaskCard({ task }) {
   if (!task) return null;
   return (
     <div className="bg-gray-100 text-gray-800 p-4 rounded-lg mb-4 shadow-sm">
-      <h3 className="text-sm uppercase text-gray-500 mb-2">Task</h3>
+      <h3 className="text-sm uppercase text-gray-500 mb-2">Задача</h3>
       <div className="whitespace-pre-wrap font-medium">{task}</div>
     </div>
   );
@@ -364,12 +363,12 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-3">
-        <h4 className="text-lg font-semibold text-center flex-1">Participants</h4>
+        <h4 className="text-lg font-semibold text-center flex-1">Участники</h4>
         <button
           onClick={() => setViewMode(viewMode === "cards" ? "table" : "cards")}
           className="px-3 py-1 text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl transition"
         >
-          {viewMode === "cards" ? "📊 Table view" : "👥 Card view"}
+          {viewMode === "cards" ? "📊 Показать таблицу" : "👥 Показать карточки"}
         </button>
       </div>
 
@@ -397,7 +396,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                   <div className="text-sm">Vote 1: {round?.votes?.[pid] ?? "-"}</div>
                   <div className="text-sm">Vote 2: {round?.votes2?.[pid] ?? "-"}</div>
                   <div className="text-sm">
-                    Recommendation:{" "}
+                    Rec:{" "}
                     {round?.recommendationVotes?.[pid] !== undefined
                       ? round.recommendationVotes[pid]
                         ? "👍"
@@ -406,7 +405,7 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                   </div>
                   <div className="text-sm">Vote 3: {round?.votes3?.[pid] ?? "-"}</div>
                   <div className={`text-sm ${getTeamColor(round?.teamEffectiveness?.[pid])}`}>
-                    Team: {round?.teamEffectiveness?.[pid] ?? "-"}
+                      Perf: {round?.teamEffectiveness?.[pid] ?? "-"}
                   </div>
                 </>
               ) : (
@@ -421,13 +420,13 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
                     {round?.votes2?.[pid] !== undefined && <div className="text-sm">Vote 2: {round.votes2[pid]}</div>}
                     {round?.recommendationVotes?.[pid] !== undefined && (
                       <div className="text-sm">
-                        Recommendation: {round.recommendationVotes[pid] ? "👍" : "👎"}
+                        Rec: {round.recommendationVotes[pid] ? "👍" : "👎"}
                       </div>
                     )}
                     {round?.votes3?.[pid] !== undefined && <div className="text-sm">Vote 3: {round.votes3[pid]}</div>}
                     {round?.teamEffectiveness?.[pid] !== undefined && (
                       <div className={`text-sm ${getTeamColor(round.teamEffectiveness[pid])}`}>
-                        Team: {round.teamEffectiveness[pid]}
+                        Perf: {round.teamEffectiveness[pid]}
                       </div>
                     )}
                   </>
@@ -442,13 +441,13 @@ function ParticipantsView({ participants, round, user, isFacilitator }) {
           <table className="min-w-full text-sm border border-gray-200 rounded-2xl overflow-hidden">
             <thead className="bg-gray-100 text-gray-600">
               <tr>
-                <th className="px-4 py-2 text-left">Participant</th>
+                <th className="px-4 py-2 text-left">Участник</th>
                 <th className="px-4 py-2 text-center">Load</th>
                 <th className="px-4 py-2 text-center">Vote 1</th>
                 <th className="px-4 py-2 text-center">Vote 2</th>
-                <th className="px-4 py-2 text-center">Recommendation</th>
+                <th className="px-4 py-2 text-center">Rec</th>
                 <th className="px-4 py-2 text-center">Vote 3</th>
-                <th className="px-4 py-2 text-center">Team</th>
+                <th className="px-4 py-2 text-center">Perf</th>
               </tr>
             </thead>
             <tbody>
@@ -493,7 +492,7 @@ function TeamVotesView({ participants, round, user }) {
 
   return (
     <div className="mb-6">
-      <h4 className="text-lg font-semibold text-center mb-4">Team Votes</h4>
+      <h4 className="text-lg font-semibold text-center mb-4">Оценки команды</h4>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {participants.map(({ id: pid, name }) => {
@@ -519,17 +518,17 @@ function TeamVotesView({ participants, round, user }) {
                 <div
                   className={`text-sm text-center py-1 rounded-xl ${getVoteColor(vote1)}`}
                 >
-                  Vote 1: {vote1 ?? "–"}
+                  Оценка 1: {vote1 ?? "–"}
                 </div>
                 <div
                   className={`text-sm text-center py-1 rounded-xl ${getVoteColor(vote2)}`}
                 >
-                  Vote 2: {vote2 ?? "–"}
+                  Оценка 2: {vote2 ?? "–"}
                 </div>
                 <div
                   className={`text-sm text-center py-1 rounded-xl ${getVoteColor(vote3)}`}
                 >
-                  Vote 3: {vote3 ?? "–"}
+                  Оценка 3: {vote3 ?? "–"}
                 </div>
               </div>
             </div>

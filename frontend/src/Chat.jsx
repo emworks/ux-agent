@@ -71,13 +71,13 @@ export default function Chat({ user, room, ws }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           className="flex-1 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          placeholder="Type a message..."
+          placeholder="Введите сообщение..."
         />
         <button
           onClick={sendMessage}
-          className="bg-indigo-600 text-white px-4 rounded hover:bg-indigo-700 transition"
+          className="bg-indigo-600 text-white px-3 rounded hover:bg-indigo-700 transition"
         >
-          Send
+          ↑
         </button>
       </div>
     </div>

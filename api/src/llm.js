@@ -26,5 +26,5 @@ export async function generateRecommendation(context, role) {
     const loads = Object.values(context.cognitiveLoad || {});
     const avgLoad = loads.length ? (loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1) : "-";
 
-    return `Роль AI: ${role}, Средняя оценка задачи: ${avgVote}, средняя нагрузка: ${avgLoad}. Рекомендуем обсудить детали и уточнить оценки.`;
+    return `Роль AI: ${role}\nСредняя оценка задачи: ${avgVote}\nСредняя нагрузка: ${avgLoad}.\nРекомендуем обсудить детали и уточнить оценки.`;
 }

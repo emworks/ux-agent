@@ -71,18 +71,18 @@ function Lobby() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
         <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
-          <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">Регистрация</h2>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder="Ваше имя"
             className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
             onClick={handleLogin}
             className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           >
-            Enter
+            Войти
           </button>
         </div>
       </div>
@@ -91,21 +91,21 @@ function Lobby() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Welcome, {user.name}</h2>
+      <h2 className="text-2xl font-bold mb-4">Привет, {user.name}</h2>
 
       <div className="mb-6 p-4 bg-gray-50 rounded shadow">
-        <h3 className="text-lg font-semibold mb-3">Create Room</h3>
+        <h3 className="text-lg font-semibold mb-3">Новая комната</h3>
         <div className="flex flex-col sm:flex-row gap-3 items-center">
           <input
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
-            placeholder="Room name"
+            placeholder="Название комнаты"
             className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-auto"
           />
 
           <div className="flex items-center gap-2">
             <button
-              title="Research Mode"
+              title="Включить исследовательский режим"
               type="button"
               onClick={() => setIsResearchMode(!isResearchMode)}
               className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ${isResearchMode ? "bg-indigo-600" : "bg-gray-300"
@@ -122,15 +122,15 @@ function Lobby() {
             onClick={handleCreateRoom}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
           >
-            Create
+            Создать
           </button>
         </div>
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Rooms</h3>
+        <h3 className="text-lg font-semibold mb-2">Все комнаты</h3>
         {rooms.length === 0 ? (
-          <p className="text-gray-500">No rooms available</p>
+          <p className="text-gray-500">Нет ни одной комнаты</p>
         ) : (
           <ul className="space-y-4">
             {rooms.map((r) => (
@@ -140,19 +140,19 @@ function Lobby() {
               >
                 <div>
                   <div className="font-semibold text-gray-800">{r.name}</div>
-                  <div className="text-gray-500 text-sm mt-1">Owner: {r.owner.name}</div>
+                  <div className="text-gray-500 text-sm mt-1">Владелец: {r.owner.name}</div>
                   <div className="text-gray-600 text-sm mt-1">
-                    Participants: {r.participants.length > 0 ? r.participants.map(({ name }) => name).join(", ") : "No one"}
+                    Участники: {r.participants.length > 0 ? r.participants.map(({ name }) => name).join(", ") : "No one"}
                   </div>
                   <div className="text-gray-600 text-sm mt-1">
                     {r.rounds && r.rounds.length > 0 ? (
                       <>
-                        Round Status: <span className="font-medium">
+                        Статус: <span className="font-medium">
                           {getRoundStatusLabel(r.rounds[r.rounds.length - 1].status)}
                         </span>
                       </>
                     ) : (
-                      <>No active round</>
+                      <>Нет активного раунда</>
                     )}
                   </div>
                 </div>
@@ -161,14 +161,14 @@ function Lobby() {
                     onClick={() => handleGoToRoom(r.id)}
                     className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
                   >
-                    Join
+                    Присоединиться
                   </button>
                   {r.ownerId === user.id && (
                     <button
                       onClick={() => handleDeleteRoom(r.id)}
                       className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
                     >
-                      Delete
+                      Удалить
                     </button>
                   )}
                 </div>
