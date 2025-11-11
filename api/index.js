@@ -53,7 +53,10 @@ app.post("/api/users", (req, res) => {
 // === ROOMS ===
 app.get("/api/rooms", (req, res) => {
     const db = readDB();
-    res.json(db.rooms);
+
+    const enrichedRooms = db.rooms.map(enrichRoomWithUserNames);
+
+    res.json(enrichedRooms);
 });
 
 app.post("/api/rooms", (req, res) => {

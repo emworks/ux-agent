@@ -57,7 +57,7 @@ export default function Room() {
       <div className="flex justify-between items-center mb-6 h-[calc(40px)]">
         <h2 className="text-2xl font-bold text-gray-800">
           <Link to="/">←</Link>{' '}
-          Room: {room.name}
+          {room.name}
         </h2>
         <button
           onClick={handleLeave}

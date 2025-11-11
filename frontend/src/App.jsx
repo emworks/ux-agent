@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { createUser, getRooms, createRoom, deleteRoom } from "./api";
 import Room from "./Room";
+import getRoundStatusLabel from "./getRoundStatusLabel";
 
 // ---------- Главный компонент ----------
 export default function App() {
@@ -70,7 +71,7 @@ function Lobby() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
         <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm">
-          <h2 className="text-2xl font-bold mb-4 text-center">Login / Register</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -81,7 +82,7 @@ function Lobby() {
             onClick={handleLogin}
             className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           >
-            Login
+            Enter
           </button>
         </div>
       </div>
@@ -139,15 +140,21 @@ function Lobby() {
               >
                 <div>
                   <div className="font-semibold text-gray-800">{r.name}</div>
-                  <div className="text-gray-500 text-sm">Owner: {r.ownerId}</div>
+                  <div className="text-gray-500 text-sm mt-1">Owner: {r.owner.name}</div>
                   <div className="text-gray-600 text-sm mt-1">
-                    Participants: {r.participants.length > 0 ? r.participants.join(", ") : "No one"}
+                    Participants: {r.participants.length > 0 ? r.participants.map(({ name }) => name).join(", ") : "No one"}
                   </div>
-                  {r.rounds && r.rounds.length > 0 ? (
-                    <>Round Status: <span className="font-medium">{r.rounds[r.rounds.length - 1].status}</span></>
-                  ) : (
-                    <>No active round</>
-                  )}
+                  <div className="text-gray-600 text-sm mt-1">
+                    {r.rounds && r.rounds.length > 0 ? (
+                      <>
+                        Round Status: <span className="font-medium">
+                          {getRoundStatusLabel(r.rounds[r.rounds.length - 1].status)}
+                        </span>
+                      </>
+                    ) : (
+                      <>No active round</>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2 mt-2 md:mt-0">
                   <button
