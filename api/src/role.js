@@ -22,13 +22,13 @@ function mapToState(value, type) {
     }
 }
 
-export async function getRole(cognitiveLoad, teamPerformance, reliance) {
+export async function getRole(context) {
     return new Promise((resolve, reject) => {
-        cognitiveLoad = mapToState(cognitiveLoad, "cognitive_load");
-        teamPerformance = mapToState(teamPerformance, "team_performance");
-        reliance = mapToState(reliance, "reliance");
+        const cognitiveLoad = mapToState(context.cognitive_load, "cognitive_load");
+        const teamPerformance = mapToState(context.team_performance, "team_performance");
+        const reliance = mapToState(context.reliance, "reliance");
 
-        const py = spawn("python3", ["./api/src/role_inference.py", cognitiveLoad, teamPerformance, reliance]);
+        const py = spawn("python3", ["./api/src/role_inference.py", context.round_id, cognitiveLoad, teamPerformance, reliance]);
 
         let output = "";
         py.stdout.on("data", (data) => {

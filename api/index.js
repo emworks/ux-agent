@@ -306,6 +306,7 @@ wss.on("connection", (ws, req) => {
                     currentRound.status = "recommendation";
 
                     const context = {
+                        round_id: currentRound.id,
                         task: currentRound.task,
                         votes: currentRound.votes,
                         cognitive_load: currentRound.average_cognitive_load,
@@ -314,7 +315,7 @@ wss.on("connection", (ws, req) => {
                     };
 
                     if (room.researchMode) {
-                        const role = await getRole(context.cognitive_load, context.team_performance, context.reliance);
+                        const role = await getRole(context);
                         currentRound.role = role;
                     }
 

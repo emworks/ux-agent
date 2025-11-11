@@ -3,6 +3,8 @@ import sys
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference import VariableElimination
+import json
+from datetime import datetime
 
 # --- модель ---
 model = BayesianModel([
@@ -40,15 +42,33 @@ cpd_role = TabularCPD(
 model.add_cpds(cpd_cognitive_load, cpd_team_performance, cpd_reliance, cpd_role)
 inference = VariableElimination(model)
 
-def get_role(cl, tp, rl):
+def get_role(round_id, cl, tp, rl):
     result = inference.query(variables=["role"], evidence={
         "cognitive_load": cl,
         "team_performance": tp,
         "reliance": rl
     })
     idx = result.values.argmax()
-    return result.state_names["role"][idx]
+    role = result.state_names["role"][idx]
+
+    log_entry = {
+        "roundId": round_id,
+        "timestamp": datetime.utcnow().isoformat(),
+        "context": {
+            "cognitiveLoad": cl,
+            "teamPerformance": tp,
+            "reliance": rl
+        },
+        "inferredRole": role,
+        "probabilities": dict(zip(result.state_names["role"], result.values.tolist()))
+    }
+
+    # лог для отладки
+    with open("logs/role_inference_log.jsonl", "a") as f:
+        f.write(json.dumps(log_entry) + "\n")
+
+    return role
 
 if __name__ == "__main__":
-    cl, tp, rl = sys.argv[1], sys.argv[2], sys.argv[3]
-    print(get_role(cl, tp, rl))
+    round_id, cl, tp, rl = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+    print(get_role(round_id, cl, tp, rl))
