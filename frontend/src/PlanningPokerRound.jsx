@@ -132,7 +132,7 @@ export default function PlanningPokerRound({ user, isFacilitator, room, ws }) {
         <>
           <TaskCard task={round?.task} />
           {round?.loadingRecommendation && (
-            <div className="text-center text-gray-500 py-2">
+            <div className="text-center text-gray-500 py-2 mb-2">
               ⏳ Generating recommendation...
             </div>
           )}

@@ -282,9 +282,9 @@ wss.on("connection", (ws, req) => {
                 }
 
                 // после recommendation_vote
-                if (payload.userId === currentRound.targetUserId) {
+                if (room.researchMode && payload.userId === currentRound.targetUserId) {
                     const reward = payload.like ? 1.0 : 0.0;
-                    // await updateBandit(room.participants.length, chosenIndex, reward);
+                    await updateBandit(room.participants.length - 1, currentRound.chosenIndex, reward);
                 }
 
                 break;
@@ -320,6 +320,15 @@ wss.on("connection", (ws, req) => {
                     }
 
                     currentRound.recommendation = await generateRecommendation(context, currentRound.role);
+
+                    const eligibleParticipants = room.participants.filter(p => p !== room.ownerId);
+
+                    // 🧠 Режим исследования — выбираем "лучшего" участника
+                    // 🎲 Обычный режим — выбираем случайного участника
+                    currentRound.chosenIndex = room.researchMode ? await selectBestParticipant(eligibleParticipants.length) : Math.floor(Math.random() * eligibleParticipants.length);
+
+                    const targetUser = eligibleParticipants[currentRound.chosenIndex];
+                    currentRound.targetUserId = targetUser;
                 } else if (currentRound.status === "recommendation") {
                     currentRound.status = "recommendation_discussion";
                 } else if (currentRound.status === "recommendation_discussion") {
@@ -330,15 +339,6 @@ wss.on("connection", (ws, req) => {
                     currentRound.status = "completed";
                     currentRound.completedAt = new Date().toISOString();
                 }
-
-                const eligibleParticipants = room.participants.filter(p => p !== room.ownerId);
-
-                // 🧠 Режим исследования — выбираем "лучшего" участника
-                // 🎲 Обычный режим — выбираем случайного участника
-                const idx = room.researchMode ? await selectBestParticipant(eligibleParticipants.length) : Math.floor(Math.random() * eligibleParticipants.length);
-
-                const targetUser = eligibleParticipants[idx];
-                currentRound.targetUserId = targetUser;
 
                 // выключаем лоадер
                 currentRound.loadingRecommendation = false;
