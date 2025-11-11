@@ -334,8 +334,9 @@ function ProgressBar({ progress, color, label }) {
 function TaskCard({ task }) {
   if (!task) return null;
   return (
-    <div className="bg-gray-100 text-gray-800 p-4 rounded-lg mb-4 text-center font-medium shadow-sm">
-      Task: {task}
+    <div className="bg-gray-100 text-gray-800 p-4 rounded-lg mb-4 shadow-sm">
+      <h3 className="text-sm uppercase text-gray-500 mb-2">Task</h3>
+      <div className="whitespace-pre-wrap font-medium">{task}</div>
     </div>
   );
 }
