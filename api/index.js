@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from "express";
 import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
@@ -318,7 +319,8 @@ wss.on("connection", (ws, req) => {
                         votes: currentRound.votes,
                         cognitive_load: currentRound.average_cognitive_load,
                         team_performance: room.team_performance,
-                        reliance: room.reliance
+                        reliance: room.reliance,
+                        participants: room.participants
                     };
 
                     if (room.researchMode) {
@@ -326,16 +328,26 @@ wss.on("connection", (ws, req) => {
                         currentRound.role = role;
                     }
 
-                    currentRound.recommendation = await generateRecommendation(context, currentRound.role);
+                    if (currentRound.role !== "Observer") {
+                        console.log("Generating recommendation...");
 
-                    const eligibleParticipants = room.participants.filter(p => p !== room.ownerId);
+                        const { prompt, recommendation } = await generateRecommendation(context, currentRound.role, room.researchMode);
+    
+                        currentRound.prompt = prompt;
+                        currentRound.recommendation = recommendation;
 
-                    // 🧠 Режим исследования — выбираем "лучшего" участника
-                    // 🎲 Обычный режим — выбираем случайного участника
-                    currentRound.chosenIndex = room.researchMode ? await selectBestParticipant(eligibleParticipants.length) : Math.floor(Math.random() * eligibleParticipants.length);
+                        console.log(prompt);
+                        console.log(recommendation);
 
-                    const targetUser = eligibleParticipants[currentRound.chosenIndex];
-                    currentRound.targetUserId = targetUser;
+                        const eligibleParticipants = room.participants.filter(p => p !== room.ownerId);
+    
+                        // 🧠 Режим исследования — выбираем "лучшего" участника
+                        // 🎲 Обычный режим — выбираем случайного участника
+                        currentRound.chosenIndex = room.researchMode ? await selectBestParticipant(eligibleParticipants.length) : Math.floor(Math.random() * eligibleParticipants.length);
+    
+                        const targetUser = eligibleParticipants[currentRound.chosenIndex];
+                        currentRound.targetUserId = targetUser;
+                    }
                 } else if (currentRound.status === "recommendation") {
                     currentRound.status = "recommendation_discussion";
                 } else if (currentRound.status === "recommendation_discussion") {

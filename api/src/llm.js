@@ -1,30 +1,78 @@
-// import OpenAI from "openai";
+import { Mistral } from '@mistralai/mistralai';
 
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-export async function generateRecommendation(context, role) {
-    //     const prompt = `
-    // Ты ${role} в Planning Poker сессии. Участники проголосовали по задаче "${context.task}".
-    // Их оценки: ${JSON.stringify(context.votes)}
-    // Их когнитивная нагрузка: ${JSON.stringify(context.cognitiveLoad)}
-    // Командная эффективность: ${JSON.stringify(context.teamEffectiveness)}
+export async function generateRecommendation(context, role, isResearchMode) {
+    const systemPrompt = getSystemPrompt(isResearchMode);
+    const prompt = getPrompt(context, role, isResearchMode);
 
-    // Сделай короткий совет участникам для повторного голосования. Ответ дай в 1-2 предложениях.
-    //   `;
+    const completion = await mistral.chat.complete({
+        model: 'mistral-medium-latest',
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt },
+        ],
+    });
 
-    // const completion = await openai.chat.completions.create({
-    //     model: "gpt-4",
-    //     messages: [{ role: "user", content: prompt }],
-    //     temperature: 0.7
-    // });
+    return {
+        prompt,
+        recommendation: completion.choices[0].message.content.trim()
+    }
+}
 
-    // return completion.choices[0].message.content.trim();
+function getSystemPrompt(isResearchMode) {
+    const systemPrompt = `
+        Ты поддерживаешь команду во время Planning Poker (коллективная оценка задач).
+        Твоя цель — улучшать согласованность команды, снижать когнитивную нагрузку, повышать точность коллективной оценки и поддерживать конструктивное обсуждение.
 
-    // context: { task, votes, cognitiveLoad, teamEffectiveness }
-    const votes = Object.values(context.votes || {});
-    const avgVote = votes.length ? (votes.reduce((a, b) => a + b, 0) / votes.length).toFixed(1) : "-";
-    const loads = Object.values(context.cognitiveLoad || {});
-    const avgLoad = loads.length ? (loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1) : "-";
+        ФОРМАТ ОТВЕТА:
+        Только текст рекомендации без пояснений, без разметки, без списка.
 
-    return `Роль AI: ${role}\nСредняя оценка задачи: ${avgVote}\nСредняя нагрузка: ${avgLoad}.\nРекомендуем обсудить детали и уточнить оценки.`;
+        ОСНОВНЫЕ ПРАВИЛА:
+        - Ты генерируешь только одну короткую рекомендацию (2–3 предложения).
+        - Не придумывай фактов о задаче, используй только предоставленный контекст.
+        - Не давай технических советов — только мета-рекомендации по процессу.
+        - Говори нейтрально, поддерживающе и без давления.
+        - Не становись участником команды — ты помощник, а не игрок.
+    `;
+
+    return !isResearchMode ? systemPrompt : `
+        ${systemPrompt}
+        - Всегда учитывай выбранную для тебя роль и следуй её стилю.
+
+        ВОЗМОЖНЫЕ РОЛИ:
+        - Facilitator: координирует и модерирует групповое взаимодействие, способствует конструктивному диалогу и помогает участникам эффективно работать вместе, облегчая принятие коллективных решений.
+        - Observer: пассивно отслеживает и анализирует поведение и динамику группы без вмешательства, предоставляя обратную связь и инсайты для понимания процесса взаимодействия.
+        - Analyst: собирает, обрабатывает и анализирует данные, предоставляет глубокую информацию и выводы для поддержки принятия решений, помогая выявлять закономерности и тенденции.
+        - Devil's Advocate: преднамеренно выдвигает альтернативные, критические или контрпримеры для предотвращения групповогo мышления и стимулирования более всестороннего обсуждения.
+        - Recommender: предлагает решения, варианты действий и рекомендации на основе анализа ситуации, направляя команду к оптимальному выбору.            
+    `;
+}
+
+function getPrompt(context, role, isResearchMode) {
+    if (isResearchMode) {
+        return `
+            Контекст раунда:
+            Задача: ${context.task}
+            Первые оценки участников: ${JSON.stringify(context.votes)}
+            Твоя роль: ${role}
+
+            В комнате всего ${context.participants.length - 1} участников.
+            Количество голосов: ${Object.keys(context.votes).length}.
+            Все участники, которые существуют в комнате, уже проголосовали.
+            Если участников только один, ты обязан рассматривать его голос как финальный и не ссылаться на других людей.
+
+            Сгенерируй рекомендацию:
+        `;
+    }
+    return `
+        Контекст раунда:
+        Задача: ${context.task}
+        Первые оценки участников: ${JSON.stringify(context.votes)}
+        Средняя когнитивная нагрузка: ${context.cognitive_load}
+        Текущая эффективность команды: ${context.team_performance}
+        Уровень доверия (AI reliance): ${context.reliance}
+
+        Сгенерируй рекомендацию:
+    `;
 }
