@@ -46,6 +46,14 @@ function Lobby() {
     if (!name) return;
     const u = await createUser(name);
     localStorage.setItem("user", JSON.stringify(u));
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get("roomId");
+
+    if (roomId) {
+      navigate(`/room/${roomId}`);
+    }
+
     setUser(u);
     setName("");
   }

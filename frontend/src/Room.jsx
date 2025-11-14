@@ -14,7 +14,7 @@ export default function Room() {
 
   useEffect(() => {
     if (!user) {
-      navigate("/");
+      navigate(`/?roomId=${id}`);
       return;
     }
 
