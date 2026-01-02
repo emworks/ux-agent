@@ -7,6 +7,18 @@
     {
       "id": "8146fc10-6109-4038-8b7f-1c27b0d187e7",
       "name": "Vasily"
+    },
+    {
+      "id": "1aa0edfd-4e93-4faf-88ca-280cabe969c1",
+      "name": "Yevgeny"
+    },
+    {
+      "id": "78f5bb99-8d71-4de8-bea4-317254ecac85",
+      "name": "Петя"
+    },
+    {
+      "id": "10fc7f3c-2415-4456-a5c1-5ecc6f07245c",
+      "name": "еее"
     }
   ],
   "rooms": [
@@ -16,9 +28,264 @@
       "ownerId": "d8579160-f7f2-444f-9329-dba9233d2117",
       "participants": [
         "d8579160-f7f2-444f-9329-dba9233d2117",
-        "8146fc10-6109-4038-8b7f-1c27b0d187e7"
+        "8146fc10-6109-4038-8b7f-1c27b0d187e7",
+        "1aa0edfd-4e93-4faf-88ca-280cabe969c1"
       ],
       "createdAt": "2025-10-23T09:50:38.231Z"
+    },
+    {
+      "id": "55b71cee-14d0-4456-9f59-ce57514beb34",
+      "name": "test",
+      "ownerId": "1aa0edfd-4e93-4faf-88ca-280cabe969c1",
+      "participants": [
+        "1aa0edfd-4e93-4faf-88ca-280cabe969c1"
+      ],
+      "createdAt": "2025-11-08T19:55:38.779Z",
+      "rounds": [
+        {
+          "id": "40cfc8e3-89ad-4203-8a01-51a3e41dee9a",
+          "task": "сделай хорошо",
+          "status": "voting",
+          "votes": {},
+          "cognitiveLoad": {},
+          "teamEffectiveness": {}
+        },
+        {
+          "id": "53c72e52-c849-4788-916f-05972f6c9208",
+          "task": "test",
+          "status": "completed",
+          "votes": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 5,
+            "1aa0edfd-4e93-4faf-88ca-280cabe969c1": 2
+          },
+          "cognitiveLoad": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 6,
+            "1aa0edfd-4e93-4faf-88ca-280cabe969c1": 3
+          },
+          "teamEffectiveness": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 4,
+            "1aa0edfd-4e93-4faf-88ca-280cabe969c1": 3
+          }
+        },
+        {
+          "id": "a0f155c1-01bf-4a8b-a045-1097e3a7b7e2",
+          "task": "щл",
+          "status": "voting",
+          "votes": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 3
+          },
+          "cognitiveLoad": {},
+          "teamEffectiveness": {}
+        },
+        {
+          "id": "ccdf7981-fed7-47ed-a3c1-ceef3ff0fff3",
+          "task": "ву",
+          "status": "completed",
+          "votes": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 3
+          },
+          "cognitiveLoad": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 6
+          },
+          "teamEffectiveness": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 5
+          }
+        },
+        {
+          "id": "0fcf3269-53cd-41d9-b7b2-666468c43a62",
+          "task": "test",
+          "status": "completed",
+          "votes": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 5
+          },
+          "cognitiveLoad": {},
+          "teamEffectiveness": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 4
+          }
+        },
+        {
+          "id": "1cd3f9ae-b99b-43ec-8e39-433aa46aa535",
+          "task": "tt",
+          "status": "completed",
+          "votes": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 3
+          },
+          "cognitiveLoad": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 6
+          },
+          "teamEffectiveness": {}
+        },
+        {
+          "id": "1b9bce11-3214-40d3-b132-bbb85c4358f2",
+          "task": "пвыап",
+          "status": "completed",
+          "votes": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 5
+          },
+          "cognitiveLoad": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 5
+          },
+          "teamEffectiveness": {
+            "78f5bb99-8d71-4de8-bea4-317254ecac85": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "e8545a1d-9dc3-414c-ace2-bba0f2e59f9a",
+      "name": "test2",
+      "ownerId": "1aa0edfd-4e93-4faf-88ca-280cabe969c1",
+      "participants": [
+        "1aa0edfd-4e93-4faf-88ca-280cabe969c1",
+        "10fc7f3c-2415-4456-a5c1-5ecc6f07245c"
+      ],
+      "createdAt": "2025-11-08T21:26:54.380Z",
+      "rounds": [
+        {
+          "id": "65241ae4-749b-47d6-a2f0-89098a2ed39a",
+          "task": "еуые",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 5
+          },
+          "cognitiveLoad": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 4
+          },
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 3
+          }
+        },
+        {
+          "id": "1003c9d0-9c45-4e4d-aef0-db97f90d2072",
+          "task": "ефыл 2",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 2
+          },
+          "cognitiveLoad": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 7
+          },
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 6
+          }
+        },
+        {
+          "id": "95c52c08-58b6-49e8-a62a-db8730a57583",
+          "task": "test",
+          "status": "completed",
+          "votes": {},
+          "cognitiveLoad": {},
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 4
+          }
+        },
+        {
+          "id": "e4101343-5eab-47d5-afc5-152868b58e56",
+          "task": "еуые",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 2
+          },
+          "cognitiveLoad": {},
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 4
+          }
+        },
+        {
+          "id": "ebf106f6-025f-4e0b-8195-0be19aedc1aa",
+          "task": "пвп",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 2
+          },
+          "cognitiveLoad": {},
+          "teamEffectiveness": {}
+        },
+        {
+          "id": "4699e615-6763-4a06-a5a1-f1b7a1a8c09f",
+          "task": "аыва",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 3
+          },
+          "cognitiveLoad": {},
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 6
+          }
+        },
+        {
+          "id": "993fe472-46c2-4ad0-a914-89bc3b3669c8",
+          "task": "test",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 3
+          },
+          "cognitiveLoad": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 3
+          },
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 6
+          }
+        },
+        {
+          "id": "5c9eb434-f30f-4c96-9ac2-6f55df912bf3",
+          "task": "авыап",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 1
+          },
+          "votes2": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 3
+          },
+          "cognitiveLoad": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 5
+          },
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 5
+          },
+          "recommendation": "Suggested value: 1",
+          "recommendationVotes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": true
+          }
+        },
+        {
+          "id": "a68e9ee3-8d2f-4ab1-bb44-e5393dd7a723",
+          "task": "fsd",
+          "status": "recommendation",
+          "votes": {},
+          "votes2": {},
+          "cognitiveLoad": {},
+          "teamEffectiveness": {},
+          "recommendation": {
+            "task": "fsd",
+            "votes": {},
+            "cognitiveLoad": {},
+            "teamEffectiveness": {}
+          },
+          "recommendationVotes": {}
+        },
+        {
+          "id": "6468112f-6dbd-43ff-9a42-5b92d5caf156",
+          "task": "gdfg",
+          "status": "completed",
+          "votes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 8
+          },
+          "votes2": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 5
+          },
+          "cognitiveLoad": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 4
+          },
+          "teamEffectiveness": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": 5
+          },
+          "recommendation": "Средняя оценка задачи: 8.0, средняя нагрузка: 4.0. Рекомендуем обсудить детали и уточнить оценки.",
+          "recommendationVotes": {
+            "10fc7f3c-2415-4456-a5c1-5ecc6f07245c": true
+          }
+        }
+      ]
     }
   ]
 }

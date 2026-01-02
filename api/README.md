@@ -17,6 +17,7 @@ Node.js / Express сервер для прототипа адаптивного 
 ## Локальный запуск
 
 ```bash
+pip install -r api/requirements.txt
 npm install
 npm start
 ```

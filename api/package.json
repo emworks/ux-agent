@@ -1,5 +1,5 @@
 {
-  "name": "ux-agent-api",
+  "name": "ux-agent-planning-poker-api",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
@@ -7,10 +7,13 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@mistralai/mistralai": "^1.10.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.19.0",
     "js-yaml": "^4.1.0",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "ws": "^8.18.3"
   }
 }
